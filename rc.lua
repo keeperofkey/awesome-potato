@@ -1,3 +1,6 @@
+package.path = package.path .. ';/usr/share/lua/5.3/?.lua;/usr/share/lua/5.3/?/init.lua'
+package.cpath = package.cpath .. ';/usr/lib/lua/5.3/?.so'
+pcall(require, "luarocks.loader")
 -- Standard awesome library
 local gears = require("gears")
 local awful = require("awful")
@@ -5,6 +8,7 @@ require("awful.autofocus")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local naughty = require("naughty")
+local vicious = require("vicious")
 local menubar = require("menubar")
 local hotkeys_popup = require("awful.hotkeys_popup")
 require("awful.hotkeys_popup.keys")
@@ -43,6 +47,8 @@ end
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
 beautiful.init(gears.filesystem.get_configuration_dir() .. "theme.lua")
+beautiful.useless_gap = 5
+beautiful.gap_single_client = true
 
 -- This is used later as the default terminal and editor to run.
 terminal = "alacritty"
@@ -167,7 +173,7 @@ end
 screen.connect_signal("property::geometry", set_wallpaper)
 
 -- Define tag names and layouts (similar to your i3 workspaces)
-local names = { " ", " ", " ", " ", " ", " ", "7", "8", "9", "10" }
+local names = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }
 local l = awful.layout.suit -- Just to save some typing: use an alias.
 local layouts = { l.tile, l.tile, l.tile, l.tile, l.tile, l.tile, l.tile, l.tile, l.tile, l.tile }
 
@@ -182,21 +188,15 @@ awful.screen.connect_for_each_screen(function(s)
 	s.mypromptbox = awful.widget.prompt()
 	-- Create an imagebox widget which will contain an icon indicating which layout we're using.
 	-- We need one layoutbox per screen.
-	s.mylayoutbox = awful.widget.layoutbox(s)
-	s.mylayoutbox:buttons(gears.table.join(
-		awful.button({}, 1, function()
-			awful.layout.inc(1)
-		end),
-		awful.button({}, 3, function()
-			awful.layout.inc(-1)
-		end),
-		awful.button({}, 4, function()
-			awful.layout.inc(1)
-		end),
-		awful.button({}, 5, function()
-			awful.layout.inc(-1)
-		end)
-	))
+    s.mylayoutbox = awful.widget.layoutbox {
+        screen  = s,
+        buttons = {
+            awful.button({ }, 1, function () awful.layout.inc( 1) end),
+            awful.button({ }, 3, function () awful.layout.inc(-1) end),
+            awful.button({ }, 4, function () awful.layout.inc(-1) end),
+            awful.button({ }, 5, function () awful.layout.inc( 1) end),
+        }
+    }
 	-- Create a taglist widget
 	s.mytaglist = awful.widget.taglist({
 		screen = s,
@@ -212,25 +212,25 @@ awful.screen.connect_for_each_screen(function(s)
 	})
 
 	-- Create the wibox
-	-- s.mywibox = awful.wibar({ position = "top", screen = s })
-	--
-	-- -- Add widgets to the wibox
-	-- s.mywibox:setup({
-	-- 	layout = wibox.layout.align.horizontal,
-	-- 	{ -- Left widgets
-	-- 		layout = wibox.layout.fixed.horizontal,
-	-- 		mylauncher,
-	-- 		s.mytaglist,
-	-- 		s.mypromptbox,
-	-- 	},
-	-- 	s.mytasklist, -- Middle widget
-	-- 	{ -- Right widgets
-	-- 		layout = wibox.layout.fixed.horizontal,
-	-- 		wibox.widget.systray(),
-	-- 		mytextclock,
-	-- 		s.mylayoutbox,
-	-- 	},
-	-- })
+	s.mywibox = awful.wibar({ position = "top", screen = s })
+	
+	-- Add widgets to the wibox
+	s.mywibox:setup({
+		layout = wibox.layout.align.horizontal,
+		{ -- Left widgets
+			layout = wibox.layout.fixed.horizontal,
+			mylauncher,
+			s.mytaglist,
+			s.mypromptbox,
+		},
+		s.mytasklist, -- Middle widget
+		{ -- Right widgets
+			layout = wibox.layout.fixed.horizontal,
+			wibox.widget.systray(),
+			mytextclock,
+			s.mylayoutbox,
+		},
+	})
 end)
 -- }}}
 
