@@ -1,5 +1,5 @@
-package.path = package.path .. ';/usr/share/lua/5.3/?.lua;/usr/share/lua/5.3/?/init.lua'
-package.cpath = package.cpath .. ';/usr/lib/lua/5.3/?.so'
+package.path = package.path .. ";/usr/share/lua/5.3/?.lua;/usr/share/lua/5.3/?/init.lua"
+package.cpath = package.cpath .. ";/usr/lib/lua/5.3/?.so"
 pcall(require, "luarocks.loader")
 -- Standard awesome library
 local gears = require("gears")
@@ -46,7 +46,8 @@ end
 
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
-beautiful.init(gears.filesystem.get_configuration_dir() .. "theme.lua")
+beautiful.init(gears.filesystem.get_themes_dir() .. "gtk/theme.lua")
+
 beautiful.useless_gap = 5
 beautiful.gap_single_client = true
 
@@ -173,35 +174,59 @@ end
 screen.connect_signal("property::geometry", set_wallpaper)
 
 -- Define tag names and layouts (similar to your i3 workspaces)
-local names = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }
-local l = awful.layout.suit -- Just to save some typing: use an alias.
-local layouts = { l.tile, l.tile, l.tile, l.tile, l.tile, l.tile, l.tile, l.tile, l.tile, l.tile }
-
-awful.screen.connect_for_each_screen(function(s)
-	-- Wallpaper
-	set_wallpaper(s)
-
+screen.connect_signal("request::desktop_decoration", function(s)
 	-- Each screen has its own tag table.
-	awful.tag(names, s, layouts)
+	awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, awful.layout.layouts[1])
 
 	-- Create a promptbox for each screen
 	s.mypromptbox = awful.widget.prompt()
+
 	-- Create an imagebox widget which will contain an icon indicating which layout we're using.
 	-- We need one layoutbox per screen.
-    s.mylayoutbox = awful.widget.layoutbox {
-        screen  = s,
-        buttons = {
-            awful.button({ }, 1, function () awful.layout.inc( 1) end),
-            awful.button({ }, 3, function () awful.layout.inc(-1) end),
-            awful.button({ }, 4, function () awful.layout.inc(-1) end),
-            awful.button({ }, 5, function () awful.layout.inc( 1) end),
-        }
-    }
+	s.mylayoutbox = awful.widget.layoutbox({
+		screen = s,
+		buttons = {
+			awful.button({}, 1, function()
+				awful.layout.inc(1)
+			end),
+			awful.button({}, 3, function()
+				awful.layout.inc(-1)
+			end),
+			awful.button({}, 4, function()
+				awful.layout.inc(-1)
+			end),
+			awful.button({}, 5, function()
+				awful.layout.inc(1)
+			end),
+		},
+	})
+
 	-- Create a taglist widget
 	s.mytaglist = awful.widget.taglist({
 		screen = s,
 		filter = awful.widget.taglist.filter.all,
-		buttons = taglist_buttons,
+		buttons = {
+			awful.button({}, 1, function(t)
+				t:view_only()
+			end),
+			awful.button({ modkey }, 1, function(t)
+				if client.focus then
+					client.focus:move_to_tag(t)
+				end
+			end),
+			awful.button({}, 3, awful.tag.viewtoggle),
+			awful.button({ modkey }, 3, function(t)
+				if client.focus then
+					client.focus:toggle_tag(t)
+				end
+			end),
+			awful.button({}, 4, function(t)
+				awful.tag.viewprev(t.screen)
+			end),
+			awful.button({}, 5, function(t)
+				awful.tag.viewnext(t.screen)
+			end),
+		},
 	})
 
 	-- Create a tasklist widget
@@ -209,24 +234,102 @@ awful.screen.connect_for_each_screen(function(s)
 		screen = s,
 		filter = awful.widget.tasklist.filter.currenttags,
 		buttons = tasklist_buttons,
+		style = {
+			shape_border_width = 1,
+			shape_border_color = "#777777",
+			shape = gears.shape.rounded_bar,
+		},
+		layout = {
+			spacing = 10,
+			spacing_widget = {
+				{
+					forced_width = 2,
+					shape = gears.shape.circle,
+					widget = wibox.widget.separator,
+				},
+				valign = "center",
+				halign = "center",
+				widget = wibox.container.place,
+			},
+			layout = wibox.layout.flex.horizontal,
+		},
+		-- Notice that there is *NO* wibox.wibox prefix, it is a template,
+		-- not a widget instance.
+		widget_template = {
+			{
+				{
+					{
+						{
+							id = "icon_role",
+							widget = wibox.widget.imagebox,
+						},
+						margins = 2,
+						widget = wibox.container.margin,
+					},
+					{
+						id = "text_role",
+						widget = wibox.widget.textbox,
+					},
+					layout = wibox.layout.fixed.horizontal,
+				},
+				left = 10,
+				right = 10,
+				widget = wibox.container.margin,
+			},
+			id = "background_role",
+			widget = wibox.container.background,
+		},
 	})
+	-- CPU widget
+	cpuwidget = wibox.widget.textbox()
+	vicious.register(cpuwidget, vicious.widgets.cpu, " $1% ", 2)
+
+	-- Memory widget
+	memwidget = wibox.widget.textbox()
+	vicious.register(memwidget, vicious.widgets.mem, " $1% ", 5)
+
+	-- Filesystem widget
+	fswidget = wibox.widget.textbox()
+	vicious.register(fswidget, vicious.widgets.fs, "${/ avail_p}% ", 120)
+
+	-- Network widget (replace 'enp3s0' with your interface)
+	netwidget = wibox.widget.textbox()
+	vicious.register(netwidget, vicious.widgets.net, "${enp66s0 up_gb} ${enp66s0 down_gb} ", 3)
+
+	-- Volume widget (requires alsa-utils)
+	volwidget = wibox.widget.textbox()
+	vicious.register(volwidget, vicious.widgets.volume, " $1% ", 2, "Master")
 
 	-- Create the wibox
-	s.mywibox = awful.wibar({ position = "top", screen = s })
-	
+	s.mywibox = awful.wibar({
+		position = "top",
+		screen = s,
+		height = 28,
+		bg = beautiful.bg_normal,
+		fg = beautiful.fg_normal,
+		-- shape = function(cr, width, height)
+		-- 	gears.shape.rounded_rect(cr, width, height, 5)
+		-- end,
+	})
+
 	-- Add widgets to the wibox
 	s.mywibox:setup({
 		layout = wibox.layout.align.horizontal,
 		{ -- Left widgets
 			layout = wibox.layout.fixed.horizontal,
 			mylauncher,
-			s.mytaglist,
+			-- s.mytaglist,
 			s.mypromptbox,
 		},
 		s.mytasklist, -- Middle widget
 		{ -- Right widgets
 			layout = wibox.layout.fixed.horizontal,
 			wibox.widget.systray(),
+			cpuwidget,
+			memwidget,
+			fswidget,
+			-- netwidget,
+			volwidget,
 			mytextclock,
 			s.mylayoutbox,
 		},
@@ -665,10 +768,10 @@ client.connect_signal("manage", function(c)
 	end
 end)
 
--- Enable sloppy focus, so that focus follows mouse
-client.connect_signal("mouse::enter", function(c)
-	c:emit_signal("request::activate", "mouse_enter", { raise = false })
-end)
+-- -- Enable sloppy focus, so that focus follows mouse
+-- client.connect_signal("mouse::enter", function(c)
+-- 	c:emit_signal("request::activate", "mouse_enter", { raise = false })
+-- end)
 
 client.connect_signal("focus", function(c)
 	c.border_color = beautiful.border_focus
