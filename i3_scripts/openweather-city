@@ -61,4 +61,4 @@ case $WEATHER_CONDITION in
     ;;
 esac
 
-echo "${WEATHER_ICON} ${FEELS} ${WEATHER_TEMP}° ${WEATHER_HUMIDITY}%  ${WIND_SPEED}${WIND_DIR} "
+echo "<span font_weight='bold'>${WEATHER_ICON}</span> <span font_weight='medium'>${FEELS}</span> <span font_weight='bold'>${WEATHER_TEMP}°</span> <span font_weight='medium'>${WEATHER_HUMIDITY}%</span> <span font_weight='bold'></span> <span font_weight='medium'>${WIND_SPEED}</span><span font_weight='bold'>${WIND_DIR}</span> "

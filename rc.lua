@@ -45,11 +45,21 @@ end
 -- }}}
 
 -- {{{ Variable definitions
+-- awful.mouse.snap.edge_enabled = false
 -- Themes define colours, icons, font and wallpapers.
 beautiful.init(gears.filesystem.get_themes_dir() .. "gtk/theme.lua")
 
-beautiful.useless_gap = 5
-beautiful.gap_single_client = true
+-- Adjust values
+beautiful.tasklist_shape_border_color_focus = "#8ec07c"
+beautiful.tasklist_shape_border_color_minimized = "#d79921"
+beautiful.tasklist_shape_border_width_minimized = 2
+beautiful.tasklist_spacing = 5
+beautiful.tasklist_shape_minimized = gears.shape.rounded_bar
+beautiful.bg_normal = "#282828cc"
+beautiful.font = "MartianMono Nerd Font Propo 10"
+
+-- beautiful.useless_gap = V
+-- beautiful.gap_single_client = true
 
 -- This is used later as the default terminal and editor to run.
 terminal = "alacritty"
@@ -113,7 +123,23 @@ menubar.utils.terminal = terminal -- Set the terminal for applications that requ
 
 -- {{{ Wibar
 -- Create a textclock widget
-mytextclock = wibox.widget.textclock()
+mytextclock = wibox.widget.textclock("<b>%m.%d.%y %I:%M</b> ")
+local weatherwidget = awful.widget.watch(
+	-- Path to your script
+	os.getenv("HOME") .. "/.config/awesome/i3_scripts/openweather-city",
+	600, -- Update interval in seconds (e.g., every 10 minutes)
+	function(widget, stdout)
+		widget:set_markup(stdout)
+	end
+)
+-- local cpuwidget = awful.widget.watch(
+-- 	-- Path to your script
+-- 	os.getenv("HOME") .. "/.config/awesome/i3_scripts/cpu_usage",
+-- 	10, -- Update interval in seconds (e.g., every 10 seconds)
+-- 	function(widget, stdout)
+-- 		widget:set_markup(stdout)
+-- 	end
+-- )
 
 -- Create a wibox for each screen and add it
 local taglist_buttons = gears.table.join(
@@ -175,31 +201,85 @@ screen.connect_signal("property::geometry", set_wallpaper)
 
 -- Define tag names and layouts (similar to your i3 workspaces)
 screen.connect_signal("request::desktop_decoration", function(s)
-	-- Each screen has its own tag table.
-	awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, awful.layout.layouts[1])
+	-- Assign tags based on screen index
+	if s.index == 1 then
+		awful.tag.add("", {
+			layout = awful.layout.suit.spiral,
+			master_fill_policy = "master_width_factor",
+			gap_single_client = true,
+			screen = s,
+			selected = true,
+		})
+		awful.tag.add("󰖟", {
+			layout = awful.layout.suit.tile,
+			screen = s,
+		})
+		awful.tag.add("", {
+			layout = awful.layout.suit.fairv,
+			screen = s,
+		})
+		awful.tag.add("", {
+			layout = awful.layout.suit.floating,
+			screen = s,
+		})
+		awful.tag.add("", {
+			layout = awful.layout.suit.max.fullscreen,
+			screen = s,
+		})
+	elseif s.index == 2 then
+		awful.tag.add("", {
+			layout = awful.layout.suit.spiral,
+			master_fill_policy = "master_width_factor",
+			gap_single_client = true,
+			screen = s,
+			selected = true,
+		})
+		awful.tag.add("", {
+			layout = awful.layout.suit.max,
+			screen = s,
+		})
+		awful.tag.add("", {
+			layout = awful.layout.suit.fairv,
+			screen = s,
+		})
+		awful.tag.add("", {
+			layout = awful.layout.suit.floating,
+			screen = s,
+		})
+		awful.tag.add("", {
+			layout = awful.layout.suit.max,
+			screen = s,
+		})
+	end
 
 	-- Create a promptbox for each screen
 	s.mypromptbox = awful.widget.prompt()
 
 	-- Create an imagebox widget which will contain an icon indicating which layout we're using.
 	-- We need one layoutbox per screen.
-	s.mylayoutbox = awful.widget.layoutbox({
-		screen = s,
-		buttons = {
-			awful.button({}, 1, function()
-				awful.layout.inc(1)
-			end),
-			awful.button({}, 3, function()
-				awful.layout.inc(-1)
-			end),
-			awful.button({}, 4, function()
-				awful.layout.inc(-1)
-			end),
-			awful.button({}, 5, function()
-				awful.layout.inc(1)
-			end),
-		},
-	})
+	s.mylayoutbox = wibox.container.margin(
+		awful.widget.layoutbox({
+			screen = s,
+			buttons = {
+				awful.button({}, 1, function()
+					awful.layout.inc(1)
+				end),
+				awful.button({}, 3, function()
+					awful.layout.inc(-1)
+				end),
+				awful.button({}, 4, function()
+					awful.layout.inc(-1)
+				end),
+				awful.button({}, 5, function()
+					awful.layout.inc(1)
+				end),
+			},
+		}),
+		4,
+		4,
+		4,
+		4
+	)
 
 	-- Create a taglist widget
 	s.mytaglist = awful.widget.taglist({
@@ -227,6 +307,29 @@ screen.connect_signal("request::desktop_decoration", function(s)
 				awful.tag.viewnext(t.screen)
 			end),
 		},
+		widget_template = {
+			{
+				{
+					id = "text_role",
+					widget = wibox.widget.textbox,
+					forced_width = 32, -- adjust for desired size
+					-- forced_height = 32,
+					-- halign = "center",
+					-- valign = "center",
+					justify = "true",
+				},
+				widget = wibox.container.place,
+				forced_width = 32, -- adjust for desired size
+				halign = "center",
+				valign = "center",
+				widget = wibox.container.margin,
+				left = 8,
+				right = 8,
+			},
+			widget = wibox.container.background,
+			id = "background_role",
+			shape = gears.shape.rounded_bar,
+		},
 	})
 
 	-- Create a tasklist widget
@@ -235,70 +338,117 @@ screen.connect_signal("request::desktop_decoration", function(s)
 		filter = awful.widget.tasklist.filter.currenttags,
 		buttons = tasklist_buttons,
 		style = {
-			shape_border_width = 1,
-			shape_border_color = "#777777",
+			shape_border_width = 2,
+			shape_border_color = "#282828",
 			shape = gears.shape.rounded_bar,
 		},
-		layout = {
-			spacing = 10,
-			spacing_widget = {
-				{
-					forced_width = 2,
-					shape = gears.shape.circle,
-					widget = wibox.widget.separator,
-				},
-				valign = "center",
-				halign = "center",
-				widget = wibox.container.place,
-			},
-			layout = wibox.layout.flex.horizontal,
-		},
-		-- Notice that there is *NO* wibox.wibox prefix, it is a template,
-		-- not a widget instance.
 		widget_template = {
 			{
 				{
 					{
-						{
-							id = "icon_role",
-							widget = wibox.widget.imagebox,
-						},
-						margins = 2,
-						widget = wibox.container.margin,
+						id = "icon_role",
+						widget = wibox.widget.imagebox,
 					},
-					{
-						id = "text_role",
-						widget = wibox.widget.textbox,
-					},
-					layout = wibox.layout.fixed.horizontal,
+					margins = 2,
+					widget = wibox.container.margin,
 				},
-				left = 10,
-				right = 10,
-				widget = wibox.container.margin,
+				id = "background_role",
+				widget = wibox.container.background,
 			},
-			id = "background_role",
-			widget = wibox.container.background,
+			widget = wibox.container.margin,
+			margins = 2,
 		},
 	})
+	s.focused_client_text = wibox.widget({
+		{
+			{
+				{
+					id = "txt",
+					widget = wibox.widget.textbox,
+					valign = "center",
+					-- halign = "center",
+					-- forced_width = 256, -- Adjust as needed
+					font = "MartianMono Nerd Font Mono Bold 8",
+				},
+				widget = wibox.container.margin,
+				left = 10,
+				right = 10,
+				top = 2,
+				bottom = 2,
+			},
+			fg = "#ebdbb2", -- text color
+			shape = gears.shape.rounded_rect,
+			shape_border_width = 2,
+			shape_border_color = beautiful.bg_normal,
+			widget = wibox.container.background,
+		},
+		widget = wibox.container.margin,
+		margins = 2,
+	})
+	local function update_focused_client_text()
+		local c = client.focus
+		local txtbox = s.focused_client_text:get_children_by_id("txt")[1]
+		if c and c.screen == s and not c.minimized then
+			local title = c.name or c.class or "[No Name]"
+			-- Helper to trim whitespace
+			local function trim(s)
+				return (s:gsub("^%s*(.-)%s*$", "%1"))
+			end
+			-- Format title as "first/last"
+			local function format_title(str)
+				local parts = {}
+				for part in string.gmatch(str, "[^%-]+") do
+					table.insert(parts, trim(part))
+				end
+				if #parts >= 2 then
+					return parts[1] .. "/" .. parts[#parts]
+				else
+					return str
+				end
+			end
+			local formatted_title = format_title(title)
+			txtbox.markup = string.format("<b>%s</b>", formatted_title)
+		else
+			txtbox.markup = ""
+		end
+	end
+	-- Connect signals
+	client.connect_signal("focus", function(c)
+		if c.screen == s then
+			update_focused_client_text()
+		end
+	end)
+	client.connect_signal("unfocus", function(c)
+		if c.screen == s then
+			update_focused_client_text()
+		end
+	end)
+	client.connect_signal("property::name", function(c)
+		if c == client.focus and c.screen == s then
+			update_focused_client_text()
+		end
+	end)
+	-- Initial update
+	update_focused_client_text()
 	-- CPU widget
 	cpuwidget = wibox.widget.textbox()
-	vicious.register(cpuwidget, vicious.widgets.cpu, " $1% ", 2)
+	vicious.register(cpuwidget, vicious.widgets.cpu, " <b>$1%</b> | ", 2)
 
 	-- Memory widget
 	memwidget = wibox.widget.textbox()
-	vicious.register(memwidget, vicious.widgets.mem, " $1% ", 5)
+	vicious.register(memwidget, vicious.widgets.mem, "  <b>$1%</b> | ", 5)
 
 	-- Filesystem widget
 	fswidget = wibox.widget.textbox()
-	vicious.register(fswidget, vicious.widgets.fs, "${/ avail_p}% ", 120)
+	vicious.register(fswidget, vicious.widgets.fs, "  <b>${/ avail_p}%</b> | ", 120)
 
 	-- Network widget (replace 'enp3s0' with your interface)
 	netwidget = wibox.widget.textbox()
-	vicious.register(netwidget, vicious.widgets.net, "${enp66s0 up_gb} ${enp66s0 down_gb} ", 3)
+	vicious.register(netwidget, vicious.widgets.net, "  <b>${enp66s0 up_gb} ${enp66s0 down_gb}</b> | ", 3)
 
 	-- Volume widget (requires alsa-utils)
 	volwidget = wibox.widget.textbox()
-	vicious.register(volwidget, vicious.widgets.volume, " $1% ", 2, "Master")
+	vicious.register(volwidget, vicious.widgets.volume, "  <b>$1%</b> | ", 2, "Master")
 
 	-- Create the wibox
 	s.mywibox = awful.wibar({
@@ -314,24 +464,35 @@ screen.connect_signal("request::desktop_decoration", function(s)
 
 	-- Add widgets to the wibox
 	s.mywibox:setup({
-		layout = wibox.layout.align.horizontal,
-		{ -- Left widgets
-			layout = wibox.layout.fixed.horizontal,
-			mylauncher,
-			-- s.mytaglist,
-			s.mypromptbox,
+		layout = wibox.layout.stack,
+		{
+			layout = wibox.layout.align.horizontal,
+			{ -- Left widgets
+				layout = wibox.layout.fixed.horizontal,
+				-- mylauncher,
+				s.mypromptbox,
+				s.mytaglist,
+				s.mytasklist,
+				s.focused_client_text, -- Middle widget
+			},
+			nil, -- No middle widget
+			{ -- Right widgets
+				layout = wibox.layout.fixed.horizontal,
+				wibox.widget.systray(),
+				cpuwidget,
+				memwidget,
+				fswidget,
+				-- netwidget,
+				volwidget,
+				mytextclock,
+				s.mylayoutbox,
+			},
 		},
-		s.mytasklist, -- Middle widget
-		{ -- Right widgets
-			layout = wibox.layout.fixed.horizontal,
-			wibox.widget.systray(),
-			cpuwidget,
-			memwidget,
-			fswidget,
-			-- netwidget,
-			volwidget,
-			mytextclock,
-			s.mylayoutbox,
+		{ -- Top layer: centered weather widget
+			layout = wibox.layout.align.horizontal,
+			nil,
+			wibox.container.place(weatherwidget),
+			nil,
 		},
 	})
 end)
@@ -339,13 +500,43 @@ end)
 
 -- {{{ Mouse bindings
 root.buttons(gears.table.join(
-	awful.button({}, 3, function()
+	awful.button({}, 2, function()
 		mymainmenu:toggle()
-	end),
-	awful.button({}, 4, awful.tag.viewnext),
-	awful.button({}, 5, awful.tag.viewprev)
+	end)
+	-- awful.button({}, 4, awful.tag.viewnext),
+	-- awful.button({}, 5, awful.tag.viewprev)
+	-- awful.button({ }, 1, function (c) client.focus = c; c:raise() end),
+	-- awful.button({ modkey }, 1, awful.mouse.client.move),
+	-- awful.button({ modkey }, 3, awful.mouse.client.resize)
 ))
 -- }}}
+
+local last_minimized_client = nil
+
+client.connect_signal("property::minimized", function(c)
+	if c.minimized then
+		last_minimized_client = c
+	end
+end)
+
+clientbuttons = gears.table.join(
+	awful.button({}, 1, function(c)
+		client.focus = c
+		c:raise()
+	end),
+	awful.button({ modkey }, 1, awful.mouse.client.move),
+	awful.button({ modkey }, 3, awful.mouse.client.resize)
+)
+-- clientbuttons = gears.table.join(
+--     awful.button({ modkey }, 1, function(c)
+--         c:emit_signal("request::activate", "mouse_click", {raise = true})
+--         awful.mouse.client.move(c)
+--     end),
+--     awful.button({ modkey }, 3, function(c)
+--         c:emit_signal("request::activate", "mouse_click", {raise = true})
+--         awful.mouse.client.resize(c)
+--     end)
+-- max
 
 -- {{{ Key bindings
 globalkeys = gears.table.join(
@@ -451,19 +642,37 @@ globalkeys = gears.table.join(
 		end
 	end, { description = "toggle fullscreen", group = "client" }),
 
-	-- Layout switching
-	awful.key({ modkey }, "s", function()
-		awful.layout.set(awful.layout.suit.floating)
-	end, { description = "set floating layout", group = "layout" }),
-	awful.key({ modkey }, "a", function()
-		awful.layout.set(awful.layout.suit.max)
-	end, { description = "set max layout", group = "layout" }),
-	awful.key({ modkey }, "x", function()
-		awful.layout.set(awful.layout.suit.tile)
-	end, { description = "set tiled layout", group = "layout" }),
-	awful.key({ modkey }, "z", function()
-		awful.layout.set(awful.layout.suit.fair)
-	end, { description = "set fair layout", group = "layout" }),
+	-- Minimize/restore focused client (tasklist behavior)
+	awful.key({ modkey }, "m", function()
+		local s = awful.screen.focused()
+		local restored = false
+		for _, c in ipairs(s.all_clients) do
+			if c.minimized then
+				c.minimized = false
+				client.focus = c
+				c:raise()
+				restored = true
+				break
+			end
+		end
+		if not restored and client.focus and not client.focus.minimized then
+			client.focus.minimized = true
+		end
+	end, { description = "restore a minimized client or minimize focused", group = "client" }),
+
+	-- -- Layout switching
+	-- awful.key({ modkey }, "s", function()
+	-- 	awful.layout.set(awful.layout.suit.floating)
+	-- end, { description = "set floating layout", group = "layout" }),
+	-- awful.key({ modkey }, "a", function()
+	-- 	awful.layout.set(awful.layout.suit.max)
+	-- end, { description = "set max layout", group = "layout" }),
+	-- awful.key({ modkey }, "x", function()
+	-- 	awful.layout.set(awful.layout.suit.tile)
+	-- end, { description = "set tiled layout", group = "layout" }),
+	-- awful.key({ modkey }, "z", function()
+	-- 	awful.layout.set(awful.layout.suit.fair)
+	-- end, { description = "set fair layout", group = "layout" }),
 
 	-- Kill focused window (like mod+q in i3)
 	awful.key({ modkey }, "q", function()
@@ -567,37 +776,67 @@ globalkeys = gears.table.join(
 
 -- Bind all key numbers to tags
 for i = 1, 10 do
+	local key = "#" .. i + 9
 	globalkeys = gears.table.join(
 		globalkeys,
 		-- View tag only.
-		awful.key({ modkey }, "#" .. i + 9, function()
-			local screen = awful.screen.focused()
-			local tag = screen.tags[i]
+		awful.key({ modkey }, key, function()
+			local s, tag
+			if i <= 5 then
+				s = screen[1]
+				tag = s.tags[i]
+			else
+				s = screen[2]
+				tag = s.tags[i - 5] -- 1st tag on screen 2 for Super+6, etc.
+			end
 			if tag then
 				tag:view_only()
 			end
 		end, { description = "view tag #" .. i, group = "tag" }),
+
 		-- Toggle tag display.
-		awful.key({ modkey, "Control" }, "#" .. i + 9, function()
-			local screen = awful.screen.focused()
-			local tag = screen.tags[i]
+		awful.key({ modkey, "Control" }, key, function()
+			local s, tag
+			if i <= 5 then
+				s = screen[1]
+				tag = s.tags[i]
+			else
+				s = screen[2]
+				tag = s.tags[i - 5]
+			end
 			if tag then
 				awful.tag.viewtoggle(tag)
 			end
 		end, { description = "toggle tag #" .. i, group = "tag" }),
+
 		-- Move client to tag.
-		awful.key({ modkey, "Shift" }, "#" .. i + 9, function()
+		awful.key({ modkey, "Shift" }, key, function()
 			if client.focus then
-				local tag = client.focus.screen.tags[i]
+				local s, tag
+				if i <= 5 then
+					s = screen[1]
+					tag = s.tags[i]
+				else
+					s = screen[2]
+					tag = s.tags[i - 5]
+				end
 				if tag then
 					client.focus:move_to_tag(tag)
 				end
 			end
 		end, { description = "move focused client to tag #" .. i, group = "tag" }),
+
 		-- Toggle tag on focused client.
-		awful.key({ modkey, "Control", "Shift" }, "#" .. i + 9, function()
+		awful.key({ modkey, "Control", "Shift" }, key, function()
 			if client.focus then
-				local tag = client.focus.screen.tags[i]
+				local s, tag
+				if i <= 5 then
+					s = screen[1]
+					tag = s.tags[i]
+				else
+					s = screen[2]
+					tag = s.tags[i - 5]
+				end
 				if tag then
 					client.focus:toggle_tag(tag)
 				end

@@ -45,18 +45,17 @@ close(MPSTAT);
 
 $cpu_usage eq -1 and die 'Can\'t find CPU information';
 
-# Print short_text, full_text
-print "${label}";
-printf "%02.${decimals}f%%\n", $cpu_usage;
-print "${label}";
-printf "%02.${decimals}f%%\n", $cpu_usage;
+my $icon = ""; # Nerd Font CPU icon
+my $sep = " | ";
 
-# Print color, if needed
+# Determine color based on thresholds
+my $color = "#fbf1c7"; # default (light gray)
 if ($cpu_usage >= $t_crit) {
-    print "#FF0000\n";
-    exit 33;
+    $color = "#FF0000"; # red
 } elsif ($cpu_usage >= $t_warn) {
-    print "#FFFC00\n";
+    $color = "#FFFC00"; # yellow
 }
 
+# Output a single line with icon, colored percentage, and separator
+printf "<span foreground='%s'><b>%s %02.${decimals}f%%</b></span>%s\n", $color, $icon, $cpu_usage, $sep;
 exit 0;
