@@ -14,7 +14,7 @@ local hotkeys_popup = require("awful.hotkeys_popup")
 require("awful.hotkeys_popup.keys")
 local xresources = require("beautiful.xresources")
 local dpi = xresources.apply_dpi
-
+-- require("mosh.audio_cpu_reactive")
 -- {{{ Error handling
 if awesome.startup_errors then
 	naughty.notify({
@@ -49,6 +49,17 @@ end
 -- Themes define colours, icons, font and wallpapers.
 beautiful.init(gears.filesystem.get_themes_dir() .. "gtk/theme.lua")
 
+-- Match powermenu/rofi look
+beautiful.menu_bg_normal = beautiful.bg_normal
+beautiful.menu_fg_normal = beautiful.fg_normal
+beautiful.menu_bg_focus = beautiful.bg_focus
+beautiful.menu_fg_focus = beautiful.fg_focus
+beautiful.menu_border_color = beautiful.border_color
+beautiful.menu_border_width = 2
+beautiful.menu_height = 36
+beautiful.menu_width = 260
+beautiful.menu_font = "MartianMono Nerd Font Propo 12"
+beautiful.menu_icon_size = 1
 -- Adjust values
 beautiful.tasklist_shape_border_color_focus = "#8ec07c"
 beautiful.tasklist_shape_border_color_minimized = "#d79921"
@@ -58,7 +69,7 @@ beautiful.tasklist_shape_minimized = gears.shape.rounded_bar
 beautiful.bg_normal = "#282828cc"
 beautiful.font = "MartianMono Nerd Font Propo 10"
 
--- beautiful.useless_gap = V
+beautiful.useless_gap = 4
 -- beautiful.gap_single_client = true
 
 -- This is used later as the default terminal and editor to run.
@@ -110,12 +121,50 @@ myawesomemenu = {
 
 mymainmenu = awful.menu({
 	items = {
-		{ "awesome", myawesomemenu, beautiful.awesome_icon },
-		{ "open terminal", terminal },
+		-- { "open terminal", terminal },
+
+		{
+			"  Shutdown",
+			function()
+				awful.spawn.with_shell("systemctl poweroff")
+			end,
+		},
+		{
+			"  Reboot",
+			function()
+				awful.spawn.with_shell("systemctl reboot")
+			end,
+		},
+		{
+			"  Suspend",
+			function()
+				awful.spawn.with_shell("systemctl suspend")
+			end,
+		},
+		{
+			"󰒲  Hibernate",
+			function()
+				awful.spawn.with_shell("systemctl hibernate")
+			end,
+		},
+		{
+			"  Lock",
+			function()
+				awful.spawn.with_shell("~/.config/i3/scripts/blur-lock")
+			end,
+		},
+		{
+			"  Logout",
+			function()
+				awesome.quit()
+			end,
+		},
+		{ "  Awesome", myawesomemenu },
+		{ "  Cancel", function() end },
 	},
 })
 
-mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon, menu = mymainmenu })
+mylauncher = awful.widget.launcher({ menu = mymainmenu })
 
 -- Menubar configuration
 menubar.utils.terminal = terminal -- Set the terminal for applications that require it
@@ -314,8 +363,8 @@ screen.connect_signal("request::desktop_decoration", function(s)
 					widget = wibox.widget.textbox,
 					forced_width = 32, -- adjust for desired size
 					-- forced_height = 32,
-					-- halign = "center",
-					-- valign = "center",
+					halign = "center",
+					valign = "center",
 					justify = "true",
 				},
 				widget = wibox.container.place,
@@ -367,8 +416,8 @@ screen.connect_signal("request::desktop_decoration", function(s)
 					widget = wibox.widget.textbox,
 					valign = "center",
 					-- halign = "center",
-					-- forced_width = 256, -- Adjust as needed
-					font = "MartianMono Nerd Font Mono Bold 8",
+					forced_width = 512, -- Adjust as needed
+					font = "MartianMono Nerd Font Mono 8",
 				},
 				widget = wibox.container.margin,
 				left = 10,
@@ -378,8 +427,8 @@ screen.connect_signal("request::desktop_decoration", function(s)
 			},
 			fg = "#ebdbb2", -- text color
 			shape = gears.shape.rounded_rect,
-			shape_border_width = 2,
-			shape_border_color = beautiful.bg_normal,
+			-- shape_border_width = 2,
+			-- shape_border_color = beautiful.bg_normal,
 			widget = wibox.container.background,
 		},
 		widget = wibox.container.margin,
@@ -407,18 +456,21 @@ screen.connect_signal("request::desktop_decoration", function(s)
 				end
 			end
 			local formatted_title = format_title(title)
-			txtbox.markup = string.format("<b>%s</b>", formatted_title)
+			txtbox.markup = string.format("<span font_weight='medium'>%s</span>", formatted_title)
 		else
 			txtbox.markup = ""
 		end
 	end
 	-- Connect signals
 	client.connect_signal("focus", function(c)
+		c.border_color = "#689d6a" -- Gruvbox aqua
+		c.border_width = 2
 		if c.screen == s then
 			update_focused_client_text()
 		end
 	end)
 	client.connect_signal("unfocus", function(c)
+		c.border_color = "#00000000" -- Fully transparent
 		if c.screen == s then
 			update_focused_client_text()
 		end
@@ -499,16 +551,17 @@ end)
 -- }}}
 
 -- {{{ Mouse bindings
-root.buttons(gears.table.join(
-	awful.button({}, 2, function()
-		mymainmenu:toggle()
-	end)
-	-- awful.button({}, 4, awful.tag.viewnext),
-	-- awful.button({}, 5, awful.tag.viewprev)
-	-- awful.button({ }, 1, function (c) client.focus = c; c:raise() end),
-	-- awful.button({ modkey }, 1, awful.mouse.client.move),
-	-- awful.button({ modkey }, 3, awful.mouse.client.resize)
-))
+root.buttons(gears.table.join(awful.button({}, 2, function()
+	mymainmenu:toggle()
+end)))
+clientbuttons = gears.table.join(
+	awful.button({}, 1, function(c)
+		client.focus = c
+		c:raise()
+	end),
+	awful.button({ modkey }, 1, awful.mouse.client.move),
+	awful.button({ modkey }, 3, awful.mouse.client.resize)
+)
 -- }}}
 
 local last_minimized_client = nil
@@ -519,27 +572,116 @@ client.connect_signal("property::minimized", function(c)
 	end
 end)
 
-clientbuttons = gears.table.join(
-	awful.button({}, 1, function(c)
-		client.focus = c
-		c:raise()
-	end),
-	awful.button({ modkey }, 1, awful.mouse.client.move),
-	awful.button({ modkey }, 3, awful.mouse.client.resize)
+-- Modular effect system setup
+local effect_core = require("glitch_effect.core")
+local wave = require("glitch_effect.effects.wave")
+local hack = require("glitch_effect.effects.hack")
+local beat_signal = require("glitch_effect.signal.beat_fifo")
+local random_pulse = require("glitch_effect.signal.random_pulse")
+local glide = require("glitch_effect.effects.glide")
+local corner_resize = require("glitch_effect.effects.corner_resize")
+
+effect_core.register_effect("glide", glide)
+effect_core.register_effect("corner_resize", corner_resize)
+effect_core.register_effect("hack", hack)
+-- effect_core.enable_effect("glide")
+-- effect_core.enable_effect("corner_resize")
+effect_core.register_effect("wave", wave)
+-- effect_core.enable_effect("wave")
+
+effect_core.start(
+	function()
+		-- Context for all effects, polled every tick
+		return {
+			beat = beat_signal.get(),
+			pulse = random_pulse.get(),
+			tick = 0.1,
+		}
+	end,
+	0.1 -- tick interval
 )
--- clientbuttons = gears.table.join(
---     awful.button({ modkey }, 1, function(c)
---         c:emit_signal("request::activate", "mouse_click", {raise = true})
---         awful.mouse.client.move(c)
---     end),
---     awful.button({ modkey }, 3, function(c)
---         c:emit_signal("request::activate", "mouse_click", {raise = true})
---         awful.mouse.client.resize(c)
---     end)
--- max
+
+-- Poll FIFO asynchronously every tick to update beat_signal.last_beat
+gears.timer({
+	timeout = 0.1,
+	autostart = true,
+	call_now = true,
+	callback = function()
+		beat_signal.poll(function(_) end)
+		random_pulse.poll()
+	end,
+})
 
 -- {{{ Key bindings
 globalkeys = gears.table.join(
+	-- Per-effect toggles (Mod+Alt+key)
+	awful.key({ modkey, "Mod1" }, "g", function()
+		if effect_core.is_effect_enabled("glide") then
+			effect_core.disable_effect("glide")
+			naughty.notify({ title = "Glide", text = "Disabled" })
+		else
+			effect_core.enable_effect("glide")
+			naughty.notify({ title = "Glide", text = "Enabled" })
+		end
+	end),
+	awful.key({ modkey, "Mod1" }, "h", function()
+		if effect_core.is_effect_enabled("hack") then
+			effect_core.disable_effect("hack")
+			naughty.notify({ title = "Hack", text = "Disabled" })
+		else
+			effect_core.enable_effect("hack")
+			naughty.notify({ title = "Hack", text = "Enabled" })
+		end
+	end),
+	awful.key({ modkey, "Mod1" }, "w", function()
+		if effect_core.is_effect_enabled("wave") then
+			effect_core.disable_effect("wave")
+			naughty.notify({ title = "Wave", text = "Disabled" })
+		else
+			effect_core.enable_effect("wave")
+			naughty.notify({ title = "Wave", text = "Enabled" })
+		end
+	end),
+	-- awful.key({ modkey, "Mod1" }, "l", function()
+	--     if effect_core.is_effect_enabled("glitch") then
+	--         effect_core.disable_effect("glitch")
+	--         naughty.notify({ title = "Glitch", text = "Disabled" })
+	--     else
+	--         effect_core.enable_effect("glitch")
+	--         naughty.notify({ title = "Glitch", text = "Enabled" })
+	--     end
+	-- end),
+	awful.key({ modkey, "Mod1" }, "r", function()
+		if effect_core.is_effect_enabled("corner_resize") then
+			effect_core.disable_effect("corner_resize")
+			naughty.notify({ title = "Corner Resize", text = "Disabled" })
+		else
+			effect_core.enable_effect("corner_resize")
+			naughty.notify({ title = "Corner Resize", text = "Enabled" })
+		end
+	end),
+	-- Global toggle (Mod+Alt+t)
+	awful.key({ modkey, "Mod1" }, "t", function()
+		local effects = { "glide", "wave", "corner_resize", "hack" }
+		local any_enabled = false
+		for _, name in ipairs(effects) do
+			if effect_core.is_effect_enabled(name) then
+				any_enabled = true
+				break
+			end
+		end
+		if any_enabled then
+			for _, name in ipairs(effects) do
+				effect_core.disable_effect(name)
+			end
+			naughty.notify({ title = "Effects", text = "All Disabled" })
+		else
+			for _, name in ipairs(effects) do
+				effect_core.enable_effect(name)
+			end
+			naughty.notify({ title = "Effects", text = "All Enabled" })
+		end
+	end, { description = "toggle effect on all windows", group = "custom" }),
 	-- Standard program
 	awful.key({ modkey }, "Return", function()
 		awful.spawn(terminal)
@@ -555,53 +697,53 @@ globalkeys = gears.table.join(
 
 	-- Layout manipulation
 	awful.key({ modkey }, "h", function()
-		awful.client.focus.bydirection("left")
+		awful.client.focus.global_bydirection("left")
 	end, { description = "focus left", group = "client" }),
 	awful.key({ modkey }, "j", function()
-		awful.client.focus.bydirection("down")
+		awful.client.focus.global_bydirection("down")
 	end, { description = "focus down", group = "client" }),
 	awful.key({ modkey }, "k", function()
-		awful.client.focus.bydirection("up")
+		awful.client.focus.global_bydirection("up")
 	end, { description = "focus up", group = "client" }),
 	awful.key({ modkey }, "l", function()
-		awful.client.focus.bydirection("right")
+		awful.client.focus.global_bydirection("right")
 	end, { description = "focus right", group = "client" }),
 	awful.key({ modkey }, "Left", function()
-		awful.client.focus.bydirection("left")
+		awful.client.focus.global_bydirection("left")
 	end, { description = "focus left", group = "client" }),
 	awful.key({ modkey }, "Down", function()
-		awful.client.focus.bydirection("down")
+		awful.client.focus.global_bydirection("down")
 	end, { description = "focus down", group = "client" }),
 	awful.key({ modkey }, "Up", function()
-		awful.client.focus.bydirection("up")
+		awful.client.focus.global_bydirection("up")
 	end, { description = "focus up", group = "client" }),
 	awful.key({ modkey }, "Right", function()
-		awful.client.focus.bydirection("right")
+		awful.client.focus.global_bydirection("right")
 	end, { description = "focus right", group = "client" }),
 
 	awful.key({ modkey, "Shift" }, "h", function()
-		awful.client.swap.bydirection("left")
+		awful.client.swap.global_bydirection("left")
 	end, { description = "swap with left client", group = "client" }),
 	awful.key({ modkey, "Shift" }, "j", function()
-		awful.client.swap.bydirection("down")
+		awful.client.swap.global_bydirection("down")
 	end, { description = "swap with down client", group = "client" }),
 	awful.key({ modkey, "Shift" }, "k", function()
-		awful.client.swap.bydirection("up")
+		awful.client.swap.global_bydirection("up")
 	end, { description = "swap with up client", group = "client" }),
 	awful.key({ modkey, "Shift" }, "l", function()
-		awful.client.swap.bydirection("right")
+		awful.client.swap.global_bydirection("right")
 	end, { description = "swap with right client", group = "client" }),
 	awful.key({ modkey, "Shift" }, "Left", function()
-		awful.client.swap.bydirection("left")
+		awful.client.swap.global_bydirection("left")
 	end, { description = "swap with left client", group = "client" }),
 	awful.key({ modkey, "Shift" }, "Down", function()
-		awful.client.swap.bydirection("down")
+		awful.client.swap.global_bydirection("down")
 	end, { description = "swap with down client", group = "client" }),
 	awful.key({ modkey, "Shift" }, "Up", function()
-		awful.client.swap.bydirection("up")
+		awful.client.swap.global_bydirection("up")
 	end, { description = "swap with up client", group = "client" }),
 	awful.key({ modkey, "Shift" }, "Right", function()
-		awful.client.swap.bydirection("right")
+		awful.client.swap.global_bydirection("right")
 	end, { description = "swap with right client", group = "client" }),
 
 	-- Layout switching
@@ -701,8 +843,8 @@ globalkeys = gears.table.join(
 
 	-- Power menu (like mod+shift+e in i3)
 	awful.key({ modkey, "Shift" }, "e", function()
-		awful.spawn.with_shell("~/.config/i3/scripts/powermenu")
-	end, { description = "power menu", group = "awesome" }),
+		mymainmenu:toggle()
+	end, { description = "menu", group = "awesome" }),
 
 	-- Browser shortcut (mod+w)
 	awful.key({ modkey }, "w", function()
