@@ -1,6 +1,6 @@
-sounddevice
-numpy
-scipy
-PyQt5
-mido
-python-rtmidi
+sounddevice>=0.4.5
+numpy>=1.20.0
+scipy>=1.8.0
+PyQt5>=5.15.0
+mido>=1.2.10
+python-rtmidi>=1.4.9
