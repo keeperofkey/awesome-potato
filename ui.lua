@@ -161,7 +161,7 @@ screen.connect_signal('request::desktop_decoration', function(s)
   -- Assign tags based on screen index
   if s.index == 1 then
     awful.tag.add('', {
-      layout = awful.layout.suit.spiral,
+      layout = lain.layout.centerwork,
       master_fill_policy = 'master_width_factor',
       gap_single_client = true,
       screen = s,
@@ -383,6 +383,35 @@ screen.connect_signal('request::desktop_decoration', function(s)
       update_focused_client_text()
     end
   end)
+local focus_stack = {}
+
+client.connect_signal("focus", function(c)
+    -- Remove if already in stack, then insert at top
+    for i = #focus_stack, 1, -1 do
+        if focus_stack[i] == c then
+            table.remove(focus_stack, i)
+        end
+    end
+    table.insert(focus_stack, c)
+end)
+
+client.connect_signal("unmanage", function(c)
+    -- Remove the killed client from the stack
+    for i = #focus_stack, 1, -1 do
+        if focus_stack[i] == c then
+            table.remove(focus_stack, i)
+        end
+    end
+    -- Focus the last valid client in the stack
+    for i = #focus_stack, 1, -1 do
+        local candidate = focus_stack[i]
+        if candidate.valid and not candidate.minimized and candidate.screen == c.screen then
+            client.focus = candidate
+            candidate:raise()
+            break
+        end
+    end
+end)
   client.connect_signal('property::name', function(c)
     if c == client.focus and c.screen == s then
       update_focused_client_text()
@@ -392,24 +421,34 @@ screen.connect_signal('request::desktop_decoration', function(s)
   update_focused_client_text()
   local cpu = lain.widget.cpu {
     settings = function()
-      widget:set_markup('  ' .. cpu_now.usage .. '% | ')
+      widget:set_markup('<span font_weight="medium" font_size="small">  ' .. cpu_now.usage .. '% | </span>')
     end,
   }
   local mem = lain.widget.mem {
     settings = function()
-      widget:set_markup('  ' .. mem_now.perc .. '% | ')
+      widget:set_markup('<span font_weight="medium" font_size="small">  ' .. mem_now.perc .. '% | </span>')
     end,
   }
   local fs = lain.widget.fs {
     partition = '/',
     settings = function()
-      widget:set_markup('  ' .. fs_now['/'].percentage .. '% | ')
+      widget:set_markup('<span font_weight="medium" font_size="small">  ' .. fs_now['/'].percentage .. '% | </span>')
     end,
   }
-  local vol = lain.widget.pulsebar {}
+  -- PulseAudio volume (based on multicolor theme)
+  -- local volume = lain.widget.pulse {
+  --   settings = function()
+  --     -- cmd = 'pacmd list-' .. pulse.devicetype .. "s | grep -e $(pactl info | grep -e 'ink' | cut -d' ' -f3) -e 'volume: front' -e 'muted'"
+  --     vlevel = volume_now.left .. '-' .. volume_now.right .. '% | ' .. volume_now.device
+  --     if volume_now.muted == 'yes' then
+  --       vlevel = vlevel .. ' M'
+  --     end
+  --     widget:set_markup(lain.util.markup('#7493d2', vlevel))
+  --   end,
+  -- }
   local bat = lain.widget.bat {
     settings = function()
-      widget:set_markup('  ' .. bat_now.perc .. '% | ')
+      widget:set_markup('<span font_weight="medium" font_size="small">   ' .. bat_now.perc .. '% | </span>')
     end,
   }
   -- vol.bar:buttons(awful.util.table.join(
@@ -491,7 +530,7 @@ screen.connect_signal('request::desktop_decoration', function(s)
         fs.widget,
         -- net.widget,
         -- vol.bar,
-        volwidget,
+        volume,
         bat.widget,
         mytextclock,
         s.mylayoutbox,
