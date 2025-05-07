@@ -11,6 +11,8 @@ beautiful.init(gears.filesystem.get_themes_dir() .. 'gtk/theme.lua')
 beautiful.bg_normal = '#282828cc'
 beautiful.font = 'MartianMono Nerd Font Propo 10'
 beautiful.wallpaper = os.getenv 'HOME' .. '/Pictures/bg.jpg'
+beautiful.border_width = 2
+beautiful.border_color = '#282828cc'
 
 beautiful.useless_gap = 4
 

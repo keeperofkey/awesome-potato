@@ -10,8 +10,10 @@ end
 -- List of apps to run on start-up
 run_once {
   -- 'feh --bg-scale ~/Pictures/bg.jpg',
+  '~/.screenlayout/monitor.sh',
   'setxkbmap -option caps:ctrl_modifier',
   'picom --config ~/.config/picom.conf',
 }
 
 return {}
+

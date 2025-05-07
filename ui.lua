@@ -383,35 +383,35 @@ screen.connect_signal('request::desktop_decoration', function(s)
       update_focused_client_text()
     end
   end)
-local focus_stack = {}
+  local focus_stack = {}
 
-client.connect_signal("focus", function(c)
+  client.connect_signal('focus', function(c)
     -- Remove if already in stack, then insert at top
     for i = #focus_stack, 1, -1 do
-        if focus_stack[i] == c then
-            table.remove(focus_stack, i)
-        end
+      if focus_stack[i] == c then
+        table.remove(focus_stack, i)
+      end
     end
     table.insert(focus_stack, c)
-end)
+  end)
 
-client.connect_signal("unmanage", function(c)
+  client.connect_signal('request::unmanage', function(c)
     -- Remove the killed client from the stack
     for i = #focus_stack, 1, -1 do
-        if focus_stack[i] == c then
-            table.remove(focus_stack, i)
-        end
+      if focus_stack[i] == c then
+        table.remove(focus_stack, i)
+      end
     end
     -- Focus the last valid client in the stack
     for i = #focus_stack, 1, -1 do
-        local candidate = focus_stack[i]
-        if candidate.valid and not candidate.minimized and candidate.screen == c.screen then
-            client.focus = candidate
-            candidate:raise()
-            break
-        end
+      local candidate = focus_stack[i]
+      if candidate.valid and not candidate.minimized and candidate.screen == c.screen then
+        client.focus = candidate
+        candidate:raise()
+        break
+      end
     end
-end)
+  end)
   client.connect_signal('property::name', function(c)
     if c == client.focus and c.screen == s then
       update_focused_client_text()
