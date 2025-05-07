@@ -11,35 +11,44 @@ local glide = require 'glitch_effect.effects.glide'
 local corner_resize = require 'glitch_effect.effects.corner_resize'
 
 local random_pulse = require 'glitch_effect.signal.random_pulse'
--- local audio_listener = require 'glitch_effect.signal.audio_listener'
--- require 'glitch_effect.signal.audio_listener'
+-- Register effects
+local pipewire = require 'glitch_effect.signal.pipewire_native'
 
 effect_core.register_effect('glide', glide)
 effect_core.register_effect('corner_resize', corner_resize)
 effect_core.register_effect('hack', hack)
 effect_core.register_effect('wave', wave)
 
+-- Create context function to pass audio signals
+local function create_context()
+    return {
+        audio_level = nil,
+        frequency_bands = nil,
+        tick = os.time()  -- Use os.time() instead of gears.timer.now()
+    }
+end
+
+-- Store current context
+local current_context = create_context()
+
+-- Update context with audio signals
+awesome.connect_signal("glitch::audio", function(level)
+    current_context.audio_level = level
+end)
+
+awesome.connect_signal("glitch::fft", function(bands)
+    current_context.frequency_bands = bands
+end)
+
+-- Start effects with context function
+pipewire.init()
 effect_core.start()
 
--- Subscribe to live audio envelope
-awesome.connect_signal("glitch::audio", function(level)
-    -- e.g. drive wave intensity
-    wave.intensity = math.min(level * 5, 1)
-end)
-
--- Subscribe to FFT bands
-awesome.connect_signal("glitch::fft", function(bands)
-    -- map low/mid/high bands to effect params
-    wave.low_band  = bands.low
-    wave.mid_band  = bands.mid
-    wave.high_band = bands.high
-end)
-
 -- Subscribe to MIDI note-on triggers
-awesome.connect_signal("glitch::midi", function(note)
-    -- retrigger a random pulse
-    random_pulse.trigger()
-end)
+-- awesome.connect_signal("glitch::midi", function(note)
+--     -- retrigger a random pulse
+--     random_pulse.trigger()
+-- end)
 
 awful.keyboard.append_global_keybindings {
   -- Per-effect toggles (Mod+Alt+key)
