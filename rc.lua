@@ -39,6 +39,9 @@ end
 --   }
 -- end)
 
+-- Load our signal debugging tool first to ensure it catches all signals
+-- require 'debug_signals'
+
 require 'binds'
 require 'autostart'
 require 'beauty' -- Theme settings before ui
@@ -46,3 +49,6 @@ require 'config'
 require 'ui'
 require 'rules'
 require 'glitch'
+
+-- Load our simplified audio test module
+require 'audio_test_simplified'
