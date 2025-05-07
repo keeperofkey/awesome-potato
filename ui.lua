@@ -333,7 +333,7 @@ screen.connect_signal('request::desktop_decoration', function(s)
         top = 2,
         bottom = 2,
       },
-      fg = '#ebdbb2', -- text color
+      -- fg = '#ebdbb2', -- text color
       shape = gears.shape.rounded_rect,
       -- shape_border_width = 2,
       -- shape_border_color = beautiful.bg_normal,

@@ -8,7 +8,9 @@ local wibox = require 'wibox'
 -- Display the current theme with naughty using beautiful.get() which returns a table it needs to be formated as a string
 local empty = '#28282800'
 beautiful.init(gears.filesystem.get_themes_dir() .. 'gtk/theme.lua')
-beautiful.bg_normal = '#282828cc'
+beautiful.bg_normal = '#000000cc'
+beautiful.fg_normal = '#eeeee0'
+
 beautiful.font = 'MartianMono Nerd Font Propo 10'
 beautiful.wallpaper = os.getenv 'HOME' .. '/Pictures/bg.jpg'
 beautiful.border_width = 2
@@ -29,7 +31,7 @@ beautiful.menu_font = 'MartianMono Nerd Font Propo 10'
 beautiful.menu_icon_size = 1
 -- Adjust values
 beautiful.tasklist_shape_border_color_focus = beautiful.bg_focus
-beautiful.tasklist_shape_border_color_minimized = beautiful.bg_occupied
+beautiful.tasklist_shape_border_color_minimized = '#8ec07c'
 beautiful.tasklist_shape_border_width_minimized = 2
 beautiful.tasklist_spacing = 5
 beautiful.tasklist_shape_minimized = gears.shape.rounded_rect

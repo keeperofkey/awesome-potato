@@ -39,10 +39,10 @@ end
 --   }
 -- end)
 
-require 'beauty' -- Theme settings before ui
 require 'binds'
+require 'autostart'
+require 'beauty' -- Theme settings before ui
 require 'config'
 require 'ui'
 require 'rules'
-require 'autostart'
 require 'glitch'

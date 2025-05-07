@@ -12,7 +12,7 @@ local corner_resize = require 'glitch_effect.effects.corner_resize'
 
 local random_pulse = require 'glitch_effect.signal.random_pulse'
 -- Register effects
-local pipewire = require 'glitch_effect.signal.pipewire_native'
+-- local pipewire = require 'glitch_effect.signal.pipewire_stream'
 
 effect_core.register_effect('glide', glide)
 effect_core.register_effect('corner_resize', corner_resize)
@@ -21,27 +21,27 @@ effect_core.register_effect('wave', wave)
 
 -- Create context function to pass audio signals
 local function create_context()
-    return {
-        audio_level = nil,
-        frequency_bands = nil,
-        tick = os.time()  -- Use os.time() instead of gears.timer.now()
-    }
+  return {
+    audio_level = nil,
+    frequency_bands = nil,
+    tick = os.time(), -- Use os.time() instead of gears.timer.now()
+  }
 end
 
 -- Store current context
 local current_context = create_context()
 
 -- Update context with audio signals
-awesome.connect_signal("glitch::audio", function(level)
-    current_context.audio_level = level
+awesome.connect_signal('glitch::audio', function(level)
+  current_context.audio_level = level
 end)
 
-awesome.connect_signal("glitch::fft", function(bands)
-    current_context.frequency_bands = bands
+awesome.connect_signal('glitch::fft', function(bands)
+  current_context.frequency_bands = bands
 end)
 
 -- Start effects with context function
-pipewire.init()
+-- pipewire.init()
 effect_core.start()
 
 -- Subscribe to MIDI note-on triggers
