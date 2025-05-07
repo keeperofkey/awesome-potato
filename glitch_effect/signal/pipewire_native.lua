@@ -46,6 +46,14 @@ local function load_pipewire_ffi()
     typedef struct pw_stream pw_stream;
     typedef struct spa_pod spa_pod;
     
+    // Core functions
+    pw_loop* pw_loop_new(void);
+    void pw_loop_destroy(pw_loop *loop);
+    pw_core* pw_core_new(void);
+    void pw_core_destroy(pw_core *core);
+    pw_stream* pw_stream_new(pw_core *core, const char *name, const spa_dict *props);
+    void pw_stream_destroy(pw_stream *stream);
+    
     // Format functions
     struct spa_format_audio_raw {
         uint32_t format;
@@ -100,11 +108,11 @@ local function process_audio(data, length)
     local rms = math.sqrt(sum / #samples)
     
     -- Debug audio level
-        naughty.notify{
-            title = "Audio Level",
-            text = string.format("RMS: %.2f%%", rms * 100),
-            timeout = 1
-        }
+    naughty.notify{
+        title = "Audio Level",
+        text = string.format("RMS: %.2f%%", rms * 100),
+        timeout = 1
+    }
     
     -- Emit signal to effects
     awesome.emit_signal("glitch::audio", rms)
@@ -124,27 +132,27 @@ local function process_audio(data, length)
     end
     
     -- Debug frequency bands (show only low, mid, high)
-        local low = 0
-        local mid = 0
-        local high = 0
+    local low = 0
+    local mid = 0
+    local high = 0
         
-        -- Calculate band averages
-        for i = 1, 10 do low = low + spectrum[i] end
-        for i = 11, 100 do mid = mid + spectrum[i] end
-        for i = 101, #spectrum do high = high + spectrum[i] end
+    -- Calculate band averages
+    for i = 1, 10 do low = low + spectrum[i] end
+    for i = 11, 100 do mid = mid + spectrum[i] end
+    for i = 101, #spectrum do high = high + spectrum[i] end
         
-        low = low / 10
-        mid = mid / 90
-        high = high / (#spectrum - 100)
+    low = low / 10
+    mid = mid / 90
+    high = high / (#spectrum - 100)
         
-        naughty.notify{
-            title = "Frequency Bands",
-            text = string.format(
-                "Low: %.2f\nMid: %.2f\nHigh: %.2f",
-                low, mid, high
-            ),
-            timeout = 1
-        }
+    naughty.notify{
+        title = "Frequency Bands",
+        text = string.format(
+            "Low: %.2f\nMid: %.2f\nHigh: %.2f",
+            low, mid, high
+        ),
+        timeout = 1
+    }
     
     awesome.emit_signal("glitch::fft", spectrum)
 end
@@ -161,15 +169,15 @@ local function init_pipewire()
         return nil
     end
     
-    -- Create core
-    local core = pw.pw_core_new()
+    -- Create core with loop
+    local core = pw.pw_core_new(loop)
     if core == nil then
         naughty.notify{title = "PipeWire", text = "Failed to create core"}
         pw.pw_loop_destroy(loop)
         return nil
     end
     
-    -- Create stream
+    -- Create stream with core
     local stream = pw.pw_stream_new(core, "awesome_audio", nil)
     if stream == nil then
         naughty.notify{title = "PipeWire", text = "Failed to create stream"}
