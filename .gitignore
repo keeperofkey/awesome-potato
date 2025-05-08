@@ -1,4 +1,6 @@
 lain/
 lain/**
+.trash/
+.trash/**
 
 **/.claude/settings.local.json
