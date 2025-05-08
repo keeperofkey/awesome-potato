@@ -64,8 +64,7 @@ To add a new effect:
 ### Modifying Audio Signal Processing
 
 Audio processing happens in either:
-- `glitch_effect/signal/audio_listener.lua` (JACK-based)
-- `glitch_effect/signal/pipewire_native.lua` (PipeWire-based)
+- `glitch_effect/signal/audio_analyzer.py` (Python-based)
 
 The key parts are:
 - Audio capture setup
@@ -84,5 +83,4 @@ The codebase doesn't have a formal testing framework. Changes should be tested b
 ## Common Issues
 
 - **FFT Performance**: The simple FFT implementation is not optimized and can impact performance for large buffer sizes.
-- **Audio Connection**: The JACK or PipeWire connection may fail if the audio system is not properly configured.
 - **Window Positioning**: Effects that change window geometry may cause windows to go off-screen.

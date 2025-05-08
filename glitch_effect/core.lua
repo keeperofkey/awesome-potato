@@ -27,7 +27,9 @@ local function cleanup_state()
     local valid = {}
     for _, c in ipairs(client.get()) do valid[c.window] = true end
     for k in pairs(state) do
-        if not valid[k] then state[k] = nil end
+        if not valid[k] then
+            state[k] = nil
+        end
     end
 end
 
