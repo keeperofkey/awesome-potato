@@ -161,7 +161,7 @@ screen.connect_signal('request::desktop_decoration', function(s)
   -- Assign tags based on screen index
   if s.index == 1 then
     awful.tag.add('', {
-      layout = lain.layout.centerwork,
+      layout = awful.layout.suit.spiral.dwindle,
       master_fill_policy = 'master_width_factor',
       gap_single_client = true,
       screen = s,

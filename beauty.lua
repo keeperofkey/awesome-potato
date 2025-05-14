@@ -7,14 +7,14 @@ local wibox = require 'wibox'
 
 -- Display the current theme with naughty using beautiful.get() which returns a table it needs to be formated as a string
 local empty = '#28282800'
-beautiful.init(gears.filesystem.get_themes_dir() .. 'gtk/theme.lua')
+beautiful.init(gears.filesystem.get_themes_dir() .. 'xresources/theme.lua')
 beautiful.bg_normal = '#000000cc'
-beautiful.fg_normal = '#eeeee0'
+-- beautiful.fg_normal = '#eeeee0'
 
 beautiful.font = 'MartianMono Nerd Font Propo 10'
 beautiful.wallpaper = os.getenv 'HOME' .. '/Pictures/bg.jpg'
 beautiful.border_width = 2
-beautiful.border_color = '#282828cc'
+-- beautiful.border_color = '#282828cc'
 
 beautiful.useless_gap = 4
 
