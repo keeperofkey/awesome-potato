@@ -172,11 +172,11 @@ screen.connect_signal('request::desktop_decoration', function(s)
       screen = s,
     })
     awful.tag.add('', {
-      layout = awful.layout.suit.fairv,
+      layout = awful.layout.suit.floating,
       screen = s,
     })
     awful.tag.add('', {
-      layout = awful.layout.suit.floating,
+      layout = awful.layout.suit.fairv,
       screen = s,
     })
     awful.tag.add('', {

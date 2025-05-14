@@ -39,6 +39,15 @@ def extract_features(y, sr):
         }
     )
 
+    # Beat detection
+    try:
+        tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
+        features["tempo"] = tempo
+        features["beats"] = librosa.frames_to_time(beat_frames, sr=sr)
+    except Exception:
+        features["tempo"] = None
+        features["beats"] = np.array([])
+
     # Tonnetz (only for harmonic signals)
     try:
         y_harmonic = librosa.effects.harmonic(y)
@@ -104,9 +113,30 @@ def live_audio_loop(rate=44100, chunk=22050, n_mfcc=13):
             send_to_awesome("glitch::zcr", zcr)
             send_to_awesome("glitch::contrast", contrast)
 
+            # Beat detection for live audio
+            try:
+                tempo, beat_frames = librosa.beat.beat_track(y=audio, sr=rate)
+                send_to_awesome("glitch::bpm", tempo)
+                # Optionally, emit a signal if a beat is detected in this chunk
+                if len(beat_frames) > 0:
+                    send_to_awesome("glitch::beat", 1)
+                else:
+                    send_to_awesome("glitch::beat", 0)
+            except Exception:
+                tempo = None  # Ensure tempo is defined
+
             # Print summary
+            if tempo is not None:
+                if isinstance(tempo, (float, int, np.floating, np.integer)):
+                    tempo_str = f"{tempo:.1f}"
+                elif hasattr(tempo, 'item'):
+                    tempo_str = f"{tempo.item():.1f}"
+                else:
+                    tempo_str = str(tempo)
+            else:
+                tempo_str = "N/A"
             sys.stdout.write(
-                f"\rRMS: {rms:.3f}, MFCC[0]: {mfcc0:.1f}, ZCR: {zcr:.3f}, Contrast: {contrast:.3f}"
+                f"\rRMS: {rms:.3f}, MFCC[0]: {mfcc0:.1f}, ZCR: {zcr:.3f}, Contrast: {contrast:.3f}, BPM: {tempo_str}"
             )
             sys.stdout.flush()
         except Exception as e:
@@ -133,8 +163,20 @@ def main():
         sys.exit(1)
     y, sr = librosa.load(audio_path, sr=None, mono=True)
     features = extract_features(y, sr)
+    # Print all features
     for k, v in features.items():
         print(f"{k}: {v}")
+    # If beat info is present, print BPM and beat times
+    if "tempo" in features and features["tempo"] is not None:
+        tempo_val = features["tempo"]
+        if isinstance(tempo_val, (float, int, np.floating, np.integer)):
+            print(f"Detected BPM: {tempo_val:.2f}")
+        elif hasattr(tempo_val, 'item'):
+            print(f"Detected BPM: {tempo_val.item():.2f}")
+        else:
+            print(f"Detected BPM: {tempo_val}")
+    if "beats" in features and features["beats"] is not None and len(features["beats"]) > 0:
+        print(f"Beat times (s): {features['beats'].tolist() if hasattr(features['beats'], 'tolist') else features['beats']}")
 
 
 if __name__ == "__main__":

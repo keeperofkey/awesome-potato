@@ -1,9 +1,9 @@
 -- Constants
-local DEFAULT_RADIUS = 20
-local MIN_RADIUS = 10
-local MAX_RADIUS = 30
-local BASE_SPEED = 1.5
-local SCREEN_MARGIN = 50  -- Minimum distance from screen edges
+local DEFAULT_RADIUS = 10
+local MIN_RADIUS = 2
+local MAX_RADIUS = 150
+local BASE_SPEED = 0.1
+local SCREEN_MARGIN = 100  -- Minimum distance from screen edges
 local AUDIO_MULTIPLIER = 10
 local TAU = 2 * math.pi  -- One full rotation in radians
 
@@ -28,9 +28,20 @@ return function(client, audio_ctx, state)
     -- Calculate radius based on audio input
     state.glide_radius = DEFAULT_RADIUS
     if audio_ctx.mfcc0 ~= 0 then
-        state.glide_radius = state.glide_radius + audio_ctx.mfcc0
+        state.glide_radius = state.glide_radius + math.abs(audio_ctx.mfcc0)
         state.glide_radius = math.min(MAX_RADIUS, math.max(MIN_RADIUS, state.glide_radius))
     end
+
+    -- Beat reactivity: pulse radius on beat
+    state.beat_pulse = state.beat_pulse or 0
+    local BEAT_PULSE_AMOUNT = 20  -- how much to pulse radius per beat
+    local BEAT_DECAY = 0.85       -- decay factor per tick (0 < BEAT_DECAY < 1)
+    if audio_ctx.beat == 1 then
+        state.beat_pulse = state.beat_pulse + BEAT_PULSE_AMOUNT
+    end
+    state.beat_pulse = state.beat_pulse * BEAT_DECAY
+    state.glide_radius = state.glide_radius + state.beat_pulse
+    state.glide_radius = math.min(MAX_RADIUS, math.max(MIN_RADIUS, state.glide_radius))
     
     -- Calculate speed based on audio RMS
     state.glide_speed = audio_ctx.rms ~= 0 and 
