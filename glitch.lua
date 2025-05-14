@@ -20,8 +20,9 @@ local current_context = {
   rms = 0, -- RMS
   mfcc0 = 0, -- MFCC[0]
   zcr = 0, -- Zero-Crossing Rate
-  spectral_contrast = 0, -- Spectral Contrast (optional)
-  frequency_bands = 0,
+  contrast = 0, -- Spectral Contrast (optional)
+  beat = 0, -- Beat (optional)
+  bpm = 0, -- BPM (optional)
 }
 
 -- Update context with audio signals
@@ -53,12 +54,18 @@ end)
 
 awesome.connect_signal('glitch::contrast', function(val)
 
-  current_context.spectral_contrast = val
+  current_context.contrast = val
   -- naughty.notify {
   --   title = 'Signal: Spectral Contrast',
   --   text = tostring(val),
   --   timeout = 1,
   -- }
+end)
+awesome.connect_signal('glitch::beat', function(val)
+  current_context.beat = val
+end)
+awesome.connect_signal('glitch::bpm', function(val)
+  current_context.bpm = val
 end)
 -- Create context function to pass audio signals
 local function create_context()
