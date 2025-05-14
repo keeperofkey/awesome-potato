@@ -33,19 +33,19 @@ return function(client, audio_ctx, state)
     end
 
     -- Beat reactivity: pulse radius on beat
-    -- state.beat_pulse = state.beat_pulse or 0
-    -- state.glide_direction = state.glide_direction or 1
-    -- local BEAT_PULSE_AMOUNT = 20  -- how much to pulse radius per beat
-    -- local BEAT_DECAY = 0.85       -- decay factor per tick (0 < BEAT_DECAY < 1)
-    -- -- if audio_ctx.beat == 1 then
-    --     -- state.beat_pulse = state.beat_pulse + BEAT_PULSE_AMOUNT
-    -- -- end
+    state.beat_pulse = state.beat_pulse or 0
+    state.glide_direction = state.glide_direction or 1
+    local BEAT_PULSE_AMOUNT = 20  -- how much to pulse radius per beat
+    local BEAT_DECAY = 0.85       -- decay factor per tick (0 < BEAT_DECAY < 1)
+    if audio_ctx.beat == 1 then
+        state.beat_pulse = state.beat_pulse + BEAT_PULSE_AMOUNT
+    end
     -- if math.random() % 10 == 0 then 
     --     state.glide_direction = -state.glide_direction  -- reverse direction on beat
     -- end
-    -- state.beat_pulse = state.beat_pulse * BEAT_DECAY
-    -- state.glide_radius = state.glide_radius + state.beat_pulse
-    -- state.glide_radius = math.min(MAX_RADIUS, math.max(MIN_RADIUS, state.glide_radius))
+    state.beat_pulse = state.beat_pulse * BEAT_DECAY
+    state.glide_radius = state.glide_radius + state.beat_pulse
+    state.glide_radius = math.min(MAX_RADIUS, math.max(MIN_RADIUS, state.glide_radius))
     
     -- Calculate speed based on audio RMS
     state.glide_speed = audio_ctx.rms ~= 0 and 

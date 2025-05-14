@@ -1,36 +1,86 @@
--- Wave effect for AwesomeWM glitch effect
--- Moves the client window horizontally in a wave pattern based on audio input
+-- Constants
+local DEFAULT_AMPLITUDE = 2  -- Small amplitude for relative movement
+local MIN_AMPLITUDE = 0.1
+local MAX_AMPLITUDE = 10
+local BASE_FREQUENCY = 0.5
+local AUDIO_MULTIPLIER = 5  -- Lower multiplier for relative movement
+local TAU = 2 * math.pi  -- One full rotation in radians
 
-return function(client, ctx, state)
-  -- Initialize persistent state with defaults
-  state.amplitude    = state.amplitude    or 50
-  state.speed        = state.speed        or 1.0
-  state.phase_offset = state.phase_offset or 0
-  state.intensity    = state.intensity    or 2.0
-  state.phase        = state.phase        or math.random() * 2 * math.pi
-  state.base_x       = state.base_x       or client.x
+return function(client, audio_ctx, state)
+    -- Initialize state if not exists
+    local screen = client.screen and client.screen.geometry
+    
+    -- Initialize phase with unique offsets per client if not exists
+    if not state.initialized then
+        -- Use client window ID to generate unique but consistent offsets
+        local unique_seed = client.window or 0
+        math.randomseed(unique_seed)
+        state.phase_x = math.random() * TAU  -- Random initial phase (0 to 2π)
+        state.phase_y = math.random() * TAU  -- Different phase for y axis
+        state.freq_mod = 0.8 + (math.random() * 0.4)  -- Slight frequency variation (0.8 to 1.2)
+        state.initialized = true
+    end
+    
+    -- Initialize wave parameters
+    state.amplitude_x = state.amplitude_x or DEFAULT_AMPLITUDE
+    state.amplitude_y = state.amplitude_y or DEFAULT_AMPLITUDE
+    state.frequency_x = state.frequency_x or BASE_FREQUENCY
+    state.frequency_y = state.frequency_y or BASE_FREQUENCY
+    
+    -- Calculate amplitude based on audio input
+    if audio_ctx.mfcc0 ~= 0 then
+        local audio_boost = math.abs(audio_ctx.mfcc0) * AUDIO_MULTIPLIER
+        state.amplitude_x = math.min(MAX_AMPLITUDE, 
+                                   math.max(MIN_AMPLITUDE, 
+                                           DEFAULT_AMPLITUDE + audio_boost))
+        state.amplitude_y = math.min(MAX_AMPLITUDE, 
+                                   math.max(MIN_AMPLITUDE, 
+                                           DEFAULT_AMPLITUDE + audio_boost))
+    end
 
-  -- Update state from audio RMS (root mean square) if available
-  if ctx.rms then
-    local target_intensity = math.min(ctx.rms * 8, 1.5)
-    state.intensity = (state.intensity * 0.7) + (target_intensity * 0.3)
-    state.amplitude = 30 + (state.intensity * 70)
-    state.speed     = 0.5 + (state.intensity * 1.5)
-  end
-
-  -- Update phase offset from MFCC0 if available
-  if ctx.mfcc0 then
-    local target_offset = (ctx.mfcc0 / 500) * math.pi
-    state.phase_offset = (state.phase_offset * 0.7) + (target_offset * 0.3)
-  end
-
-  -- Advance the phase for animation
-  state.phase = (state.phase + state.speed * 0.05 * math.pi) % (2 * math.pi)
-
-  -- Calculate horizontal displacement
-  local displacement = math.floor(state.amplitude * math.sin(state.phase + state.phase_offset) * state.intensity)
-
-  -- Move the client window horizontally
-  local geom = client:geometry()
-  client:geometry { x = state.base_x + displacement }
+    -- Beat reactivity: pulse amplitude on beat
+    state.beat_pulse = state.beat_pulse or 0
+    local BEAT_PULSE_AMOUNT = 30  -- how much to pulse amplitude per beat
+    local BEAT_DECAY = 0.9        -- decay factor per tick (0 < BEAT_DECAY < 1)
+    
+    if audio_ctx.beat == 1 then
+        state.beat_pulse = BEAT_PULSE_AMOUNT
+    end
+    
+    state.beat_pulse = state.beat_pulse * BEAT_DECAY
+    
+    -- Calculate time step
+    local time_step = audio_ctx.tick or 0.1
+    
+    -- Get audio signal for modulation (using mfcc1 for phase modulation)
+    local audio_mod = audio_ctx.mfcc1 or 0
+    
+    -- Calculate phase modulation based on audio
+    -- Scale audio_mod to a reasonable range (0.5 to 1.5)
+    local phase_mod = 0.5 + (math.abs(audio_mod) * 2)
+    
+    -- Update phases with audio modulation and unique frequency
+    local freq_mod = state.freq_mod or 1
+    state.phase_x = (state.phase_x + state.frequency_x * time_step * phase_mod * freq_mod) % TAU
+    state.phase_y = (state.phase_y + state.frequency_y * time_step * (2 - phase_mod) * (1/freq_mod)) % TAU
+    
+    -- Calculate relative offsets with sine waves
+    local pulse_boost = state.beat_pulse  * 0.2-- Very small pulse boost for relative movement
+    local offset_x = (state.amplitude_x + pulse_boost) * math.sin(state.phase_x)
+    local offset_y = (state.amplitude_y + pulse_boost) * math.cos(state.phase_y)
+    
+    -- Apply relative offset to current position
+    local current_geom = client:geometry()
+    local new_x = current_geom.x + offset_x
+    local new_y = current_geom.y + offset_y
+    
+    -- Update window position if changed
+    local current_geom = client:geometry()
+    if math.floor(current_geom.x) ~= math.floor(new_x) or 
+       math.floor(current_geom.y) ~= math.floor(new_y) then
+        client:geometry { 
+            x = math.floor(new_x), 
+            y = math.floor(new_y) 
+        }
+    end
 end
