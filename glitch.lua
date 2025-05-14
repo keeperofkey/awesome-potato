@@ -24,12 +24,6 @@ local current_context = {
   frequency_bands = 0,
 }
 
--- awesome.connect_signal('glitch:features', function(val)
---   current_context.rms = val.rms
---   current_context.mfcc0 = val.mfcc0
---   current_context.zcr = val.zcr
---   current_context.spectral_contrast = val.contrast
--- end)
 -- Update context with audio signals
 awesome.connect_signal('glitch::rms', function(val)
   current_context.rms = val
@@ -46,6 +40,7 @@ awesome.connect_signal('glitch::mfcc0', function(val)
   --   text = tostring(val),
   --   timeout = 1,
   -- }
+
 end)
 awesome.connect_signal('glitch::zcr', function(val)
   current_context.zcr = val
@@ -55,7 +50,9 @@ awesome.connect_signal('glitch::zcr', function(val)
   --   timeout = 1,
   -- }
 end)
+
 awesome.connect_signal('glitch::contrast', function(val)
+
   current_context.spectral_contrast = val
   -- naughty.notify {
   --   title = 'Signal: Spectral Contrast',
@@ -76,6 +73,7 @@ effect_core.start(create_context)
 
 -- -- Make sure script is executable
 -- awful.spawn.with_shell(script_path)
+
 
 awful.keyboard.append_global_keybindings {
   awful.key({ modkey, 'Mod1' }, 's', function()

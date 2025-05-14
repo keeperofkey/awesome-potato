@@ -3,28 +3,21 @@ MAX_RADIUS = 20
 local SPEED = 0.5
 local RADIUS = 20
 local BASE_WIDTH, BASE_HEIGHT = 800, 500
-local RANDOM_MARGIN = 100
 
 return function(c, ctx, s)
-  s.glide_radius = RADIUS
-  s.base_x = c.x
-  s.base_y = c.y
-  local scr = c.screen and c.screen.geometry
-  s.glide_phase = s.glide_phase or math.random() * 2 * math.pi
-  local normalized_rms = (ctx.rms * 2) - 1 -- Assuming ctx.rms is in the range [0, 1]
+    s.base_x = s.base_x or c.x
+    s.base_y = s.base_y or c.y
+    local scr = c.screen and c.screen.geometry 
+    s.glide_phase = s.glide_phase or math.random() * 2 * math.pi
+    s.glide_center = s.glide_center or {
+        x = math.random(scr.x + RANDOM_MARGIN, scr.x + scr.width - RANDOM_MARGIN),
         y = math.random(scr.y + RANDOM_MARGIN, scr.y + scr.height - RANDOM_MARGIN),
+    }
+    s.glide_radius = RADIUS + (math.abs(ctx.mfcc0)) 
+    s.glide_speed = SPEED * (ctx.rms * 10)
 
-  -- if ctx.rms ~= 0 then
-  s.glide_speed = SPEED * normalized_rms
-  -- else
-  --   s.glide_speed = (SPEED * 2) - 1
-  -- end
+    s.glide_phase = (s.glide_phase + s.glide_speed * (ctx.tick or 0.1)) % (2 * math.pi)
 
-  -- if ctx.mfcc0 ~= 0 then
-  s.glide_radius = RADIUS + math.min(MIN_RADIUS, math.max(MAX_RADIUS, ctx.mfcc0))
-  -- else
-  --   s.glide_radius = RADIUS
-  -- end
 
   -- Modulate phase using an audio signal (e.g., ctx.mfcc0)
   local modulation = ctx.contrast ~= 0 and ctx.contrast or 1

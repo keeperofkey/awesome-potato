@@ -35,6 +35,7 @@ local function cleanup_state()
   for k in pairs(state) do
     if not valid[k] then
       state[k] = nil
+
     end
   end
 end
