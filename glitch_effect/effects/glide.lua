@@ -1,39 +1,59 @@
-MIN_RADIUS = 10
-MAX_RADIUS = 20
-local SPEED = 0.5
-local RADIUS = 20
-local BASE_WIDTH, BASE_HEIGHT = 800, 500
+-- Constants
+local DEFAULT_RADIUS = 20
+local MIN_RADIUS = 10
+local MAX_RADIUS = 30
+local BASE_SPEED = 1.5
+local SCREEN_MARGIN = 50  -- Minimum distance from screen edges
+local AUDIO_MULTIPLIER = 10
+local TAU = 2 * math.pi  -- One full rotation in radians
 
-return function(c, ctx, s)
-    s.base_x = s.base_x or c.x
-    s.base_y = s.base_y or c.y
-    local scr = c.screen and c.screen.geometry 
-    s.glide_phase = s.glide_phase or math.random() * 2 * math.pi
-    s.glide_center = s.glide_center or {
-        x = math.random(scr.x + RANDOM_MARGIN, scr.x + scr.width - RANDOM_MARGIN),
-        y = math.random(scr.y + RANDOM_MARGIN, scr.y + scr.height - RANDOM_MARGIN),
-    }
-    s.glide_radius = RADIUS + (math.abs(ctx.mfcc0)) 
-    s.glide_speed = SPEED * (ctx.rms * 10)
-
-    s.glide_phase = (s.glide_phase + s.glide_speed * (ctx.tick or 0.1)) % (2 * math.pi)
-
-
-  -- Modulate phase using an audio signal (e.g., ctx.mfcc0)
-  local modulation = ctx.contrast ~= 0 and ctx.contrast or 1
-  s.glide_phase = (s.glide_phase + s.glide_speed * modulation) % (2 * math.pi)
-
-  local w = c.width
-  local h = c.height
-  local glide_x = math.floor(s.base_x + s.glide_radius * math.cos(s.glide_phase))
-  local glide_y = math.floor(s.base_y + s.glide_radius * math.sin(s.glide_phase))
-  local new_x, new_y = glide_x, glide_y
-
-  -- Clamp to screen
-  new_x = math.max(scr.x, math.min(new_x, scr.x + scr.width - w))
-  new_y = math.max(scr.y, math.min(new_y, scr.y + scr.height - h))
-  local geom = c:geometry()
-  if geom.x ~= new_x or geom.y ~= new_y then
-    c:geometry { x = new_x, y = new_y }
-  end
+return function(client, audio_ctx, state)
+    -- Initialize state if not exists
+    local screen = client.screen and client.screen.geometry
+    
+    -- Initialize base position
+    state.base_x = client.x
+    state.base_y = client.y
+    
+    -- Initialize or get glide center point
+    if not state.glide_center then
+        state.glide_center = {
+            x = math.random(screen.x + SCREEN_MARGIN, 
+                          screen.x + screen.width - SCREEN_MARGIN),
+            y = math.random(screen.y + SCREEN_MARGIN, 
+                          screen.y + screen.height - SCREEN_MARGIN)
+        }
+    end
+    
+    -- Calculate radius based on audio input
+    state.glide_radius = DEFAULT_RADIUS
+    if audio_ctx.mfcc0 ~= 0 then
+        state.glide_radius = state.glide_radius + audio_ctx.mfcc0
+        state.glide_radius = math.min(MAX_RADIUS, math.max(MIN_RADIUS, state.glide_radius))
+    end
+    
+    -- Calculate speed based on audio RMS
+    state.glide_speed = audio_ctx.rms ~= 0 and 
+                       (BASE_SPEED + (audio_ctx.rms * AUDIO_MULTIPLIER)) or 
+                       BASE_SPEED
+    
+    -- Update phase with time and modulation
+    state.glide_phase = state.glide_phase or math.random() * TAU
+    local time_step = audio_ctx.tick or 0.1
+    local modulation = audio_ctx.contrast ~= 0 and audio_ctx.contrast or 1
+    state.glide_phase = (state.glide_phase + state.glide_speed * time_step * modulation) % TAU
+    
+    -- Calculate new position
+    local new_x = math.floor(state.base_x + state.glide_radius * math.cos(state.glide_phase))
+    local new_y = math.floor(state.base_y + state.glide_radius * math.sin(state.glide_phase))
+    
+    -- Ensure window stays within screen bounds
+    new_x = math.max(screen.x, math.min(new_x, screen.x + screen.width - client.width))
+    new_y = math.max(screen.y, math.min(new_y, screen.y + screen.height - client.height))
+    
+    -- Update window position if changed
+    local current_geom = client:geometry()
+    if current_geom.x ~= new_x or current_geom.y ~= new_y then
+        client:geometry { x = new_x, y = new_y }
+    end
 end
