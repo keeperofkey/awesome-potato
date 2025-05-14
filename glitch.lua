@@ -17,14 +17,12 @@ effect_core.register_effect('hack', hack)
 effect_core.register_effect('wave', wave)
 -- Store current context
 local current_context = {
-  rms = nil,           -- RMS
-  mfcc0 = nil,                -- MFCC[0]
-  zcr = nil,                  -- Zero-Crossing Rate
-  spectral_contrast = nil,    -- Spectral Contrast (optional)
-  frequency_bands = nil,
+  rms = 0, -- RMS
+  mfcc0 = 0, -- MFCC[0]
+  zcr = 0, -- Zero-Crossing Rate
+  spectral_contrast = 0, -- Spectral Contrast (optional)
+  frequency_bands = 0,
 }
-
-
 
 -- Update context with audio signals
 awesome.connect_signal('glitch::rms', function(val)
@@ -52,7 +50,9 @@ awesome.connect_signal('glitch::zcr', function(val)
   --   timeout = 1,
   -- }
 end)
-awesome.connect_signal('glitch::spectral_contrast', function(val)
+
+awesome.connect_signal('glitch::contrast', function(val)
+
   current_context.spectral_contrast = val
   -- naughty.notify {
   --   title = 'Signal: Spectral Contrast',
@@ -155,4 +155,3 @@ awful.keyboard.append_global_keybindings {
     end
   end, { description = 'toggle effect on all windows', group = 'custom' }),
 }
-
