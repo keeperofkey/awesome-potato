@@ -55,24 +55,46 @@ return function(client, audio_ctx, state)
     -- Get audio signal for modulation (using mfcc1 for phase modulation)
     local audio_mod = audio_ctx.mfcc1 or 0
     
+    -- Calculate BPM-based speed factor (normalized around 1.0)
+    local bpm_speed = 1.0
+    if audio_ctx.bpm and audio_ctx.bpm > 0 then
+        -- Normalize around 120 BPM (1.0 at 120 BPM)
+        bpm_speed = audio_ctx.bpm / 120.0
+        -- Limit the range to avoid extreme speeds
+        bpm_speed = math.max(0.5, math.min(2.0, bpm_speed))
+    end
+    
     -- Calculate phase modulation based on audio
     -- Scale audio_mod to a reasonable range (0.5 to 1.5)
     local phase_mod = 0.5 + (math.abs(audio_mod) * 2)
     
-    -- Update phases with audio modulation and unique frequency
+    -- Update phases with BPM-based speed and audio modulation
     local freq_mod = state.freq_mod or 1
-    state.phase_x = (state.phase_x + state.frequency_x * time_step * phase_mod * freq_mod) % TAU
-    state.phase_y = (state.phase_y + state.frequency_y * time_step * (2 - phase_mod) * (1/freq_mod)) % TAU
+    local base_speed = 0.5  -- Base speed multiplier
+    state.phase_x = (state.phase_x + state.frequency_x * time_step * phase_mod * freq_mod * bpm_speed * base_speed) % TAU
+    state.phase_y = (state.phase_y + state.frequency_y * time_step * (2 - phase_mod) * (1/freq_mod) * bpm_speed * base_speed) % TAU
     
     -- Calculate relative offsets with sine waves
     local pulse_boost = state.beat_pulse  * 0.2-- Very small pulse boost for relative movement
     local offset_x = (state.amplitude_x + pulse_boost) * math.sin(state.phase_x)
     local offset_y = (state.amplitude_y + pulse_boost) * math.cos(state.phase_y)
     
-    -- Apply relative offset to current position
+    -- Get current geometry and screen bounds
     local current_geom = client:geometry()
+    local screen_geom = client.screen.workarea
+    
+    -- Calculate new position with relative offset
     local new_x = current_geom.x + offset_x
     local new_y = current_geom.y + offset_y
+    
+    -- Constrain to screen bounds with margin
+    local margin = 20  -- pixels from screen edge
+    new_x = math.max(screen_geom.x + margin, 
+                    math.min(new_x, 
+                           screen_geom.x + screen_geom.width - current_geom.width - margin))
+    new_y = math.max(screen_geom.y + margin, 
+                    math.min(new_y, 
+                           screen_geom.y + screen_geom.height - current_geom.height - margin))
     
     -- Update window position if changed
     local current_geom = client:geometry()
