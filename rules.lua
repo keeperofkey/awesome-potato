@@ -29,6 +29,19 @@ ruled.client.append_rule {
     end
   end,
 }
+ruled.client.append_rule {
+  rule = { class = 'WallpaperTerminal' },
+  properties = {
+    floating = false,
+    sticky = true,
+    ontop = false,
+    focusable = false,
+    maximized = true,
+
+    below = true,
+    border_width = 0,
+  },
+}
 
 ruled.client.append_rule {
   rule_any = {

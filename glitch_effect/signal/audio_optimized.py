@@ -18,6 +18,9 @@ def extract_features(y, sr):
     rms = librosa.feature.rms(y=y)
     centroid = librosa.feature.spectral_centroid(y=y, sr=sr)
     bandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr)
+    # New features
+    melspec = librosa.feature.melspectrogram(y=y, sr=sr)
+    poly = librosa.feature.poly_features(y=y, sr=sr)
 
     # Compute features
     features.update(
@@ -36,6 +39,11 @@ def extract_features(y, sr):
             "centroid_std": np.std(centroid),
             "bandwidth_mean": np.mean(bandwidth),
             "bandwidth_std": np.std(bandwidth),
+            # Added features
+            "melspec_mean": np.mean(melspec, axis=1),
+            "melspec_std": np.std(melspec, axis=1),
+            "poly_mean": np.mean(poly, axis=1),
+            "poly_std": np.std(poly, axis=1),
         }
     )
 
@@ -106,12 +114,20 @@ def live_audio_loop(rate=44100, chunk=22050, n_mfcc=13):
             )
             zcr = float(librosa.feature.zero_crossing_rate(y=audio).mean())
             contrast = float(librosa.feature.spectral_contrast(y=audio, sr=rate).mean())
+            # New features
+            melspec = librosa.feature.melspectrogram(y=audio, sr=rate)
+            melspec_mean = float(np.mean(melspec))
+            poly = librosa.feature.poly_features(y=audio, sr=rate)
+            poly_mean_arr = np.mean(poly, axis=1)
+            poly_mean_str = ",".join([f"{v:.6f}" for v in poly_mean_arr])
 
             # Emit individual signals for each feature
             send_to_awesome("glitch::rms", rms)
             send_to_awesome("glitch::mfcc0", mfcc0)
             send_to_awesome("glitch::zcr", zcr)
             send_to_awesome("glitch::contrast", contrast)
+            send_to_awesome("glitch::melspec_mean", melspec_mean)
+            send_to_awesome("glitch::poly_mean", poly_mean_str)
 
             # Beat detection for live audio
             try:
@@ -136,7 +152,7 @@ def live_audio_loop(rate=44100, chunk=22050, n_mfcc=13):
             else:
                 tempo_str = "N/A"
             sys.stdout.write(
-                f"\rRMS: {rms:.3f}, MFCC[0]: {mfcc0:.1f}, ZCR: {zcr:.3f}, Contrast: {contrast:.3f}, BPM: {tempo_str}"
+                f"\rRMS: {rms:.3f}, MFCC[0]: {mfcc0:.1f}, ZCR: {zcr:.3f}, Contrast: {contrast:.3f}, MelSpec: {melspec_mean:.3f}, Poly: {poly_mean_str}, BPM: {tempo_str}"
             )
             sys.stdout.flush()
         except Exception as e:

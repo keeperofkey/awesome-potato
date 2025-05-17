@@ -17,9 +17,9 @@ return function(c, ctx, s)
     if ctx.zcr and ctx.zcr > 0.1 then
         prob = math.min(1, prob + ctx.zcr * 2)
     end
-    if ctx.spectral_contrast and ctx.spectral_contrast > 0.2 then
-        prob = math.min(1, prob + ctx.spectral_contrast)
-    end
+    -- if ctx.spectral_contrast and ctx.spectral_contrast > 0.2 then
+    --     prob = math.min(1, prob + ctx.spectral_contrast)
+    -- end
     -- Randomly glitch: jump to a previous geometry for 1 tick
     if math.random() < prob and #s.history > 1 then
         local idx = math.random(2, #s.history)

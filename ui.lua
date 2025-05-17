@@ -147,10 +147,31 @@ local tasklist_buttons = gears.table.join(
     awful.client.focus.byidx(-1)
   end)
 )
-
-screen.connect_signal('request::wallpaper', function(s)
-  gears.wallpaper.maximized(beautiful.wallpaper, s)
-end)
+-- screen.connect_signal('request::wallpaper', function(s)
+--   -- Path to your input image or GIF
+--   local image_path = '/home/v0id/Pictures/gif/output.gif'
+--
+--   -- Command to spawn a terminal running chafa
+--   local cmd = [[
+--         alacritty --class wallpaper -e bash -c 'chafa --scale max -c 240 --align center,bottom -p false -f symbols --symbols all --speed 0.5 --fg-only --clear "]] .. image_path .. [["' &
+--         sleep 0.5 &&  # Wait for the terminal to spawn
+--         wmctrl -r wallpaper -b add,below &&  # Send the terminal to the bottom layer
+--         wmctrl -r wallpaper -b add,sticky &&  # Make it sticky across all workspaces
+--         wmctrl -r wallpaper -b add,skip_taskbar &&  # Remove it from the taskbar
+--         wmctrl -r wallpaper -b add,skip_pager &&  # Remove it from the pager
+--         xdotool search --class wallpaper windowunmap &&  # Make it non-interactive
+--         xdotool search --class wallpaper windowmap  # Remap it to ensure it's visible
+--     ]]
+--
+--   -- Kill any existing terminal wallpaper instances
+--   awful.spawn.with_shell "pkill -f 'alacritty --class wallpaper'"
+--
+--   -- Execute the command
+--   awful.spawn.with_shell(cmd)
+-- end)
+-- screen.connect_signal('request::wallpaper', function(s)
+--   gears.wallpaper.maximized(beautiful.wallpaper, s)
+-- end)
 -- -- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
 -- screen.connect_signal('property::geometry', function(s)
 --   gears.wallpaper.maximized(beautiful.wallpaper, s)
@@ -275,7 +296,7 @@ screen.connect_signal('request::desktop_decoration', function(s)
           valign = 'center',
           justify = 'true',
         },
-        widget = wibox.container.place,
+        -- widget = wibox.container.place,
         forced_width = 32, -- adjust for desired size
         halign = 'center',
         valign = 'center',
@@ -297,25 +318,30 @@ screen.connect_signal('request::desktop_decoration', function(s)
     style = {
       shape_border_width = 2,
       shape_border_color = '#282828',
-      shape = gears.shape.rounded_bar,
+      shape = gears.shape.circle,
     },
     widget_template = {
       {
         {
           {
-            id = 'icon_role',
-            widget = wibox.widget.imagebox,
+            -- id = 'icon_role',
+            -- widget = wibox.widget.imagebox,
+            awful.widget.clienticon,
+            margins = 2,
+            widget = wibox.container.margin,
           },
           margins = 2,
           widget = wibox.container.margin,
         },
         id = 'background_role',
+        bg = '#282828cc',
         widget = wibox.container.background,
       },
       widget = wibox.container.margin,
       margins = 2,
     },
   }
+
   s.focused_client_text = wibox.widget {
     {
       {
@@ -371,14 +397,14 @@ screen.connect_signal('request::desktop_decoration', function(s)
   end
   -- Connect signals
   client.connect_signal('focus', function(c)
-    c.border_color = '#689d6a' -- Gruvbox aqua
+    c.border_color = '#ebdbb2cc' -- Gruvbox fg
     c.border_width = 2
     if c.screen == s then
       update_focused_client_text()
     end
   end)
   client.connect_signal('unfocus', function(c)
-    c.border_color = '#00000000' -- Fully transparent
+    c.border_color = '#0c0d0fcc' -- 80% transparent
     if c.screen == s then
       update_focused_client_text()
     end

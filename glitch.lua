@@ -9,12 +9,14 @@ local wave = require 'glitch_effect.effects.wave'
 local hack = require 'glitch_effect.effects.hack'
 local glide = require 'glitch_effect.effects.glide'
 local corner_resize = require 'glitch_effect.effects.corner_resize'
+local spectral_slide = require 'glitch_effect.effects.spectral_slide'
 
 -- Register effects
 effect_core.register_effect('glide', glide)
 effect_core.register_effect('corner_resize', corner_resize)
 effect_core.register_effect('hack', hack)
 effect_core.register_effect('wave', wave)
+effect_core.register_effect('spectral_slide', spectral_slide)
 -- Store current context
 local current_context = {
   rms = 0, -- RMS
@@ -23,6 +25,9 @@ local current_context = {
   contrast = 0, -- Spectral Contrast (optional)
   beat = 0, -- Beat (optional)
   bpm = 0, -- BPM (optional)
+  melspec_mean = 0, -- Mel-spectrogram mean (optional)
+  poly_mean = 0, -- Poly features (optional)
+
 }
 
 -- Update context with audio signals
@@ -67,6 +72,18 @@ end)
 awesome.connect_signal('glitch::bpm', function(val)
   current_context.bpm = val
 end)
+awesome.connect_signal('glitch::melspec_mean', function(val)
+  current_context.melspec_mean = val
+end)
+awesome.connect_signal('glitch::poly_mean', function(val)
+  -- Parse comma-separated string into a Lua table
+  local t = {}
+  for num in string.gmatch(val, '([^,]+)') do
+    table.insert(t, tonumber(num))
+  end
+  current_context.poly_mean = t
+end)
+
 -- Create context function to pass audio signals
 local function create_context()
   return current_context
@@ -83,7 +100,7 @@ effect_core.start(create_context)
 
 
 awful.keyboard.append_global_keybindings {
-  awful.key({ modkey, 'Mod1' }, 's', function()
+  awful.key({ modkey, 'Mod1' }, 'x', function()
     -- Emit a test signal directly
     awesome.emit_signal('glitch::rms', 0.8)
     -- Show notification
@@ -112,6 +129,16 @@ awful.keyboard.append_global_keybindings {
     else
       effect_core.enable_effect 'hack'
       naughty.notify { title = 'Hack', text = 'Enabled' }
+    end
+  end),
+
+  awful.key({ modkey, 'Mod1' }, 's', function()
+    if effect_core.is_effect_enabled 'spectral_slide' then
+      effect_core.disable_effect 'spectral_slide'
+      naughty.notify { title = 'Spectral Slide', text = 'Disabled' }
+    else
+      effect_core.enable_effect 'spectral_slide'
+      naughty.notify { title = 'Spectral Slide', text = 'Enabled' }
     end
   end),
 
