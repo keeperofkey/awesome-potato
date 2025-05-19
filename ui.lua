@@ -169,13 +169,14 @@ local tasklist_buttons = gears.table.join(
 --   -- Execute the command
 --   awful.spawn.with_shell(cmd)
 -- end)
--- screen.connect_signal('request::wallpaper', function(s)
---   gears.wallpaper.maximized(beautiful.wallpaper, s)
--- end)
--- -- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
--- screen.connect_signal('property::geometry', function(s)
---   gears.wallpaper.maximized(beautiful.wallpaper, s)
--- end)
+screen.connect_signal('request::wallpaper', function(s)
+  gears.wallpaper.maximized(beautiful.wallpaper, s)
+  -- explicitly calculate the wallpaper size for the current screen. use chafa -s flag with size in columns and rows example -s 80x60
+end)
+-- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
+screen.connect_signal('property::geometry', function(s)
+  gears.wallpaper.maximized(beautiful.wallpaper, s)
+end)
 
 -- Define tag names and layouts (similar to your i3 workspaces)
 screen.connect_signal('request::desktop_decoration', function(s)

@@ -32,13 +32,23 @@ ruled.client.append_rule {
 ruled.client.append_rule {
   rule = { class = 'WallpaperTerminal' },
   properties = {
-    floating = false,
+    floating = true,
+    below = true,
     sticky = true,
     ontop = false,
     focusable = false,
-    maximized = true,
+    -- x = screen[1].geometry.x,
+    -- y = screen[1].geometry.y,
+    -- width = screen[1].geometry.width,
+    -- height = screen[1].geometry.height,
+    -- maximized = true,
 
-    below = true,
+    placement = awful.placement.centered,
+
+    skip_taskbar = true,
+    skip_pager = true,
+    titlebars_enabled = false,
+    window_type = 'desktop',
     border_width = 0,
   },
 }

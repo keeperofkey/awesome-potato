@@ -28,7 +28,13 @@ awful.keyboard.append_global_keybindings {
   awful.key({ modkey, 'Shift' }, 'c', function()
     awful.spawn.with_shell 'i3lock -i ~/.config/i3/i3-screen-lock.png -t'
   end, { description = 'lock screen', group = 'awesome' }),
-
+  awful.key({ modkey }, 'b', function()
+    awful.spawn.with_shell(
+      'alacritty --class WallpaperTerminal --config-file ~/.config/alacritty/alacritty-bg.toml -e'
+        .. ' chafa -c 240 --symbols braille --fill all --fg-only --scale max --speed 0.5 --fit-width --margin-bottom 0'
+        .. ' ~/Pictures/gif/outout.gif'
+    )
+  end, { description = 'chafa wallpaper', group = 'awesome' }),
   -- Layout manipulation
   awful.key({ modkey }, 'h', function()
     awful.client.focus.global_bydirection 'left'
@@ -249,7 +255,7 @@ awful.keyboard.append_global_keybindings {
 -- Bind all key numbers to tags
 for i = 1, 10 do
   local key = '#' .. i + 9
- awful.keyboard.append_global_keybindings { 
+  awful.keyboard.append_global_keybindings {
     -- View tag only.
     awful.key({ modkey }, key, function()
       local s, tag
@@ -312,7 +318,7 @@ for i = 1, 10 do
           client.focus:toggle_tag(tag)
         end
       end
-    end, { description = 'toggle focused client on tag #' .. i, group = 'tag' })
+    end, { description = 'toggle focused client on tag #' .. i, group = 'tag' }),
   }
 end
 

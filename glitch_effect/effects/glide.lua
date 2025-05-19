@@ -1,7 +1,7 @@
 -- Constants
-local DEFAULT_RADIUS = 10
+local DEFAULT_RADIUS = 5
 local MIN_RADIUS = 1
-local MAX_RADIUS = 100
+local MAX_RADIUS = 20
 local BASE_SPEED = 0.1
 local SCREEN_MARGIN = 10 -- Minimum distance from screen edges
 local AUDIO_MULTIPLIER = 10
@@ -23,16 +23,19 @@ return function(client, audio_ctx, state)
   state.glide_radius = DEFAULT_RADIUS
   state.glide_radius = math.min(MAX_RADIUS, math.max(MIN_RADIUS, state.glide_radius))
   -- Initialize or get glide center point
-  -- if not state.glide_center then
-  --   state.glide_center = {
-  --     x = math.random(screen.x + SCREEN_MARGIN, screen.x + screen.width - SCREEN_MARGIN),
-  --     y = math.random(screen.y + SCREEN_MARGIN, screen.y + screen.height - SCREEN_MARGIN),
-  --   }
-  -- end
+  if not state.glide_center then
+    state.glide_center = {
+      x = math.random(screen.x + SCREEN_MARGIN, screen.x + screen.width - SCREEN_MARGIN),
+      y = math.random(screen.y + SCREEN_MARGIN, screen.y + screen.height - SCREEN_MARGIN),
+    }
+  end
 
   -- Calculate radius based on audio input
   if audio_ctx.mfcc0 ~= 0 then
     state.glide_radius = state.glide_radius + math.abs(audio_ctx.mfcc0)
+    state.glide_radius = math.min(MAX_RADIUS, math.max(MIN_RADIUS, state.glide_radius))
+  else
+    state.glide_radius = state.glide_radius + math.random()
     state.glide_radius = math.min(MAX_RADIUS, math.max(MIN_RADIUS, state.glide_radius))
   end
 

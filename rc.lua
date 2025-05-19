@@ -2,6 +2,8 @@
 pcall(require, 'luarocks.loader')
 
 local naughty = require 'naughty'
+local awful = require 'awful'
+local gears = require 'gears'
 local hotkeys_popup = require 'awful.hotkeys_popup'
 require 'awful.hotkeys_popup.keys'
 require 'awful.autofocus'
@@ -32,13 +34,13 @@ do
     in_error = false
   end)
 end
--- naughty.connect_signal('request::display_error', function(message, startup)
---   naughty.notification {
---     urgency = 'critical',
---     title = 'Oops, an error happened' .. (startup and ' during startup!' or '!'),
---     message = message,
---   }
--- end)
+naughty.connect_signal('request::display_error', function(message, startup)
+  naughty.notification {
+    urgency = 'critical',
+    title = 'Oops, an error happened' .. (startup and ' during startup!' or '!'),
+    message = message,
+  }
+end)
 
 -- this is trash
 -- Load our signal debugging tool first to ensure it catches all signals
