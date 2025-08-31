@@ -42,16 +42,11 @@ naughty.connect_signal('request::display_error', function(message, startup)
   }
 end)
 
--- this is trash
--- Load our signal debugging tool first to ensure it catches all signals
--- require 'debug_signals'
--- Load our simplified audio test module
--- require 'audio_test_simplified'
-
+-- load modules
 require 'binds'
 require 'autostart'
 require 'beauty' -- Theme settings before ui
 require 'config'
 require 'ui'
 require 'rules'
-require 'glitch'
+-- require 'glitch'

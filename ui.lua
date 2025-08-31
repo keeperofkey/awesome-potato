@@ -147,37 +147,13 @@ local tasklist_buttons = gears.table.join(
     awful.client.focus.byidx(-1)
   end)
 )
--- screen.connect_signal('request::wallpaper', function(s)
---   -- Path to your input image or GIF
---   local image_path = '/home/v0id/Pictures/gif/output.gif'
---
---   -- Command to spawn a terminal running chafa
---   local cmd = [[
---         alacritty --class wallpaper -e bash -c 'chafa --scale max -c 240 --align center,bottom -p false -f symbols --symbols all --speed 0.5 --fg-only --clear "]] .. image_path .. [["' &
---         sleep 0.5 &&  # Wait for the terminal to spawn
---         wmctrl -r wallpaper -b add,below &&  # Send the terminal to the bottom layer
---         wmctrl -r wallpaper -b add,sticky &&  # Make it sticky across all workspaces
---         wmctrl -r wallpaper -b add,skip_taskbar &&  # Remove it from the taskbar
---         wmctrl -r wallpaper -b add,skip_pager &&  # Remove it from the pager
---         xdotool search --class wallpaper windowunmap &&  # Make it non-interactive
---         xdotool search --class wallpaper windowmap  # Remap it to ensure it's visible
---     ]]
---
---   -- Kill any existing terminal wallpaper instances
---   awful.spawn.with_shell "pkill -f 'alacritty --class wallpaper'"
---
---   -- Execute the command
---   awful.spawn.with_shell(cmd)
--- end)
 screen.connect_signal('request::wallpaper', function(s)
   gears.wallpaper.maximized(beautiful.wallpaper, s)
-  -- explicitly calculate the wallpaper size for the current screen. use chafa -s flag with size in columns and rows example -s 80x60
 end)
 -- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
 screen.connect_signal('property::geometry', function(s)
   gears.wallpaper.maximized(beautiful.wallpaper, s)
 end)
-
 -- Define tag names and layouts (similar to your i3 workspaces)
 screen.connect_signal('request::desktop_decoration', function(s)
   -- Assign tags based on screen index
@@ -194,11 +170,11 @@ screen.connect_signal('request::desktop_decoration', function(s)
       screen = s,
     })
     awful.tag.add('', {
-      layout = awful.layout.suit.floating,
+      layout = lain.layout.termfair.stable,
       screen = s,
     })
     awful.tag.add('', {
-      layout = awful.layout.suit.max,
+      layout = awful.layout.suit.floating,
       screen = s,
     })
     awful.tag.add('', {
@@ -397,6 +373,27 @@ screen.connect_signal('request::desktop_decoration', function(s)
     end
   end
   -- Connect signals
+  client.connect_signal('manage', function(c)
+    -- Set the windows at the slave,
+    -- i.e. put it at the end of others instead of setting it master.
+    if not awesome.startup then
+      -- if #awful.screen.focused().clients == 1 then
+      --   awful.client.setmaster(c)
+      -- else
+      awful.client.setslave(c)
+      -- end
+    end
+    -- else
+    --   -- Optional: Log a message if a managed client doesn't have a valid tag.
+    --   -- This can help diagnose which client type or situation causes this.
+    --   -- awful.print_error("Warning: manage signal fired for client without a valid tag.", c)
+    -- end
+
+    if awesome.startup and not c.size_hints.user_position and not c.size_hints.program_position then
+      -- Prevent clients from being unreachable after screen count changes.
+      awful.placement.no_offscreen(c)
+    end
+  end)
   client.connect_signal('focus', function(c)
     c.border_color = '#ebdbb2cc' -- Gruvbox fg
     c.border_width = 2

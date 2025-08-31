@@ -14,6 +14,7 @@ run_once {
   '~/.screenlayout/monitor.sh',
   'setxkbmap -option caps:ctrl_modifier',
   'picom --config ~/.config/picom.conf',
+  '/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1',
 }
 
 return {}
