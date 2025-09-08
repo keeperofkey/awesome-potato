@@ -7,7 +7,9 @@ local gears = require 'gears'
 local hotkeys_popup = require 'awful.hotkeys_popup'
 require 'awful.hotkeys_popup.keys'
 require 'awful.autofocus'
--- -- Error handling
+require 'awful.ewmh'
+
+-- Error handling
 if awesome.startup_errors then
   naughty.notify {
     preset = naughty.config.presets.critical,
@@ -42,7 +44,7 @@ naughty.connect_signal('request::display_error', function(message, startup)
   }
 end)
 
--- load modules
+-- Load modules
 require 'binds'
 require 'autostart'
 require 'beauty' -- Theme settings before ui

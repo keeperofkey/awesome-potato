@@ -4,7 +4,10 @@ local gears = require 'gears'
 local wibox = require 'wibox'
 local beautiful = require 'beautiful'
 local lain = require 'lain'
--- local vicious = require 'vicious'
+local hotkeys_popup = require 'awful.hotkeys_popup'
+local config = require 'config'
+local terminal = config.terminal
+local editor_cmd = config.editor_cmd
 
 -- {{{ Menu
 -- Create a launcher widget and a main menu
@@ -416,45 +419,23 @@ screen.connect_signal('request::desktop_decoration', function(s)
     end
   end)
   client.connect_signal('focus', function(c)
+    -- Set border styling
     c.border_color = '#ebdbb2cc' -- Gruvbox fg
     c.border_width = 2
+    
+    -- Raise window to top
+    c:raise()
+    
+    -- Update focused client text if on this screen
     if c.screen == s then
       update_focused_client_text()
     end
   end)
+  
   client.connect_signal('unfocus', function(c)
     c.border_color = '#0c0d0fcc' -- 80% transparent
     if c.screen == s then
       update_focused_client_text()
-    end
-  end)
-  local focus_stack = {}
-
-  client.connect_signal('focus', function(c)
-    -- Remove if already in stack, then insert at top
-    for i = #focus_stack, 1, -1 do
-      if focus_stack[i] == c then
-        table.remove(focus_stack, i)
-      end
-    end
-    table.insert(focus_stack, c)
-  end)
-
-  client.connect_signal('request::unmanage', function(c)
-    -- Remove the killed client from the stack
-    for i = #focus_stack, 1, -1 do
-      if focus_stack[i] == c then
-        table.remove(focus_stack, i)
-      end
-    end
-    -- Focus the last valid client in the stack
-    for i = #focus_stack, 1, -1 do
-      local candidate = focus_stack[i]
-      if candidate.valid and not candidate.minimized and candidate.screen == c.screen then
-        client.focus = candidate
-        candidate:raise()
-        break
-      end
     end
   end)
   client.connect_signal('property::name', function(c)

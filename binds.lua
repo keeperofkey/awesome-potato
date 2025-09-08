@@ -4,8 +4,9 @@ local gears = require 'gears'
 local naughty = require 'naughty'
 local config = require 'config'
 local modkey = config.modkey
--- local modkey = require 'config.modkey'
--- local modkey = 'mod4'
+local terminal = config.terminal
+
+-- mymainmenu is a global variable defined in ui.lua
 local last_minimized_client = nil
 
 client.connect_signal('property::minimized', function(c)
@@ -28,7 +29,7 @@ awful.keyboard.append_global_keybindings {
   awful.key({ modkey, 'Shift' }, 'c', function()
     awful.spawn.with_shell 'i3lock -i ~/.config/i3/i3-screen-lock.png -t'
   end, { description = 'lock screen', group = 'awesome' }),
-  awful.key({ modkey }, 'b', function()
+  awful.key({ modkey, 'Shift' }, 'w', function()
     awful.spawn.with_shell(
       'alacritty --class WallpaperTerminal --config-file ~/.config/alacritty/alacritty-bg.toml -e'
         .. ' chafa -c 240 --symbols braille --fill all --fg-only --scale max --speed 0.5 --fit-width --margin-bottom 0'
@@ -100,13 +101,6 @@ awful.keyboard.append_global_keybindings {
   awful.key({ modkey }, 'Tab', awful.tag.viewnext, { description = 'view next', group = 'tag' }),
   awful.key({ modkey, 'Shift' }, 'Tab', awful.tag.viewprev, { description = 'view previous', group = 'tag' }),
 
-  -- Directional client focus
-  awful.key({ modkey }, 'j', function()
-    awful.client.focus.byidx(1)
-  end, { description = 'focus next by index', group = 'client' }),
-  awful.key({ modkey }, 'k', function()
-    awful.client.focus.byidx(-1)
-  end, { description = 'focus previous by index', group = 'client' }),
 
   -- Splitting
   awful.key({ modkey }, 'b', function()
@@ -142,19 +136,6 @@ awful.keyboard.append_global_keybindings {
     end
   end, { description = 'restore a minimized client or minimize focused', group = 'client' }),
 
-  -- -- Layout switching
-  -- awful.key({ modkey }, "s", function()
-  -- 	awful.layout.set(awful.layout.suit.floating)
-  -- end, { description = "set floating layout", group = "layout" }),
-  -- awful.key({ modkey }, "a", function()
-  -- 	awful.layout.set(awful.layout.suit.max)
-  -- end, { description = "set max layout", group = "layout" }),
-  -- awful.key({ modkey }, "x", function()
-  -- 	awful.layout.set(awful.layout.suit.tile)
-  -- end, { description = "set tiled layout", group = "layout" }),
-  -- awful.key({ modkey }, "z", function()
-  -- 	awful.layout.set(awful.layout.suit.fair)
-  -- end, { description = "set fair layout", group = "layout" }),
 
   -- Kill focused window (like mod+q in i3)
   awful.key({ modkey }, 'q', function()

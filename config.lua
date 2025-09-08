@@ -22,4 +22,4 @@ awful.layout.layouts = {
   lain.layout.centerwork.horizontal,
 }
 
-return { terminal = terminal, editor = editor, modkey = modkey }
+return { terminal = terminal, editor = editor, modkey = modkey, editor_cmd = editor_cmd }
