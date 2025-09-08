@@ -11,7 +11,7 @@ ruled.client.append_rule {
     border_color = beautiful.border_normal,
     focus = awful.client.focus.filter,
     raise = true,
-    -- buttons = clientbuttons,
+    buttons = clientbuttons,
     screen = awful.screen.preferred,
     placement = awful.placement.no_overlap + awful.placement.no_offscreen,
   },
@@ -60,10 +60,10 @@ ruled.client.append_rule {
 
 -- Force Zen Browser to tile properly
 ruled.client.append_rule {
-  rule = { class = "zen" },
-  properties = { 
+  rule = { class = 'zen' },
+  properties = {
     floating = false,
     maximized = false,
-    size_hints_honor = false
+    size_hints_honor = false,
   },
 }

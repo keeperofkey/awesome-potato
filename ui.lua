@@ -116,7 +116,7 @@ local volwidget = awful.widget.watch(
     if output and output ~= '' then
       widget:set_markup('<span font_weight="medium" font_size="small">' .. output .. '</span>')
     else
-      widget:set_markup('<span font_weight="medium" font_size="small"> N/A | </span>')
+      widget:set_markup '<span font_weight="medium" font_size="small"> N/A | </span>'
     end
   end
 )
@@ -291,23 +291,18 @@ screen.connect_signal('request::desktop_decoration', function(s)
         {
           id = 'text_role',
           widget = wibox.widget.textbox,
-          forced_width = 32, -- adjust for desired size
-          -- forced_height = 32,
           halign = 'center',
           valign = 'center',
-          justify = 'true',
         },
-        -- widget = wibox.container.place,
-        forced_width = 32, -- adjust for desired size
+        widget = wibox.container.place,
+        forced_width = 32,
+        forced_height = 32,
         halign = 'center',
         valign = 'center',
-        widget = wibox.container.margin,
-        left = 8,
-        right = 8,
       },
       widget = wibox.container.background,
       id = 'background_role',
-      shape = gears.shape.rounded_bar,
+      bg = '#000000',
     },
   }
 
@@ -318,24 +313,19 @@ screen.connect_signal('request::desktop_decoration', function(s)
     buttons = tasklist_buttons,
     style = {
       shape_border_width = 2,
-      shape_border_color = '#282828',
+      shape_border_color = '#28282833',
       shape = gears.shape.circle,
     },
     widget_template = {
       {
         {
-          {
-            -- id = 'icon_role',
-            -- widget = wibox.widget.imagebox,
-            awful.widget.clienticon,
-            margins = 2,
-            widget = wibox.container.margin,
-          },
-          margins = 2,
-          widget = wibox.container.margin,
+          awful.widget.clienticon,
+          widget = wibox.container.place,
+          halign = 'center',
+          valign = 'center',
         },
         id = 'background_role',
-        bg = '#282828cc',
+        bg = '#28282833',
         widget = wibox.container.background,
       },
       widget = wibox.container.margin,
@@ -422,16 +412,16 @@ screen.connect_signal('request::desktop_decoration', function(s)
     -- Set border styling
     c.border_color = '#ebdbb2cc' -- Gruvbox fg
     c.border_width = 2
-    
+
     -- Raise window to top
     c:raise()
-    
+
     -- Update focused client text if on this screen
     if c.screen == s then
       update_focused_client_text()
     end
   end)
-  
+
   client.connect_signal('unfocus', function(c)
     c.border_color = '#0c0d0fcc' -- 80% transparent
     if c.screen == s then
@@ -513,7 +503,7 @@ screen.connect_signal('request::desktop_decoration', function(s)
           top = margins.top,
           bottom = margins.bottom,
         },
-        bg = bg_color or beautiful.bg_normal,
+        bg = '#00000033',
         shape = gears.shape.rounded_rect,
         widget = wibox.container.background,
       },
