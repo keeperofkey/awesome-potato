@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Get GPU utilization and memory usage from nvidia-smi
+gpu_info=$(nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu --format=csv,noheader,nounits)
+
+if [ $? -eq 0 ]; then
+    # Parse the output
+    gpu_util=$(echo "$gpu_info" | cut -d',' -f1 | tr -d ' ')
+    mem_used=$(echo "$gpu_info" | cut -d',' -f2 | tr -d ' ')
+    mem_total=$(echo "$gpu_info" | cut -d',' -f3 | tr -d ' ')
+    temp=$(echo "$gpu_info" | cut -d',' -f4 | tr -d ' ')
+    
+    # Calculate memory percentage
+    mem_percent=$((mem_used * 100 / mem_total))
+    
+    # Output format: "󰢮 GPU_UTIL% MEM_PERCENT% TEMP°C"
+    echo "󰢮 ${gpu_util}% ${mem_percent}% ${temp}°C"
+else
+    echo "󰢮 N/A"
+fi

@@ -8,10 +8,10 @@ local wibox = require 'wibox'
 -- Display the current theme with naughty using beautiful.get() which returns a table it needs to be formated as a string
 local empty = '#28282800'
 beautiful.init(gears.filesystem.get_themes_dir() .. 'xresources/theme.lua')
-beautiful.bg_normal = '#000000cc'
--- beautiful.fg_normal = '#eeeee0'
+beautiful.bg_normal = '#282828cc'
+beautiful.fg_normal = '#eeeee0'
 
-beautiful.font = 'MartianMono Nerd Font Propo 10'
+beautiful.font = 'SauceCodePro Nerd Font Propo Bold 10'
 beautiful.wallpaper = os.getenv 'HOME' .. '/Pictures/bg.jpg'
 beautiful.border_width = 2
 -- beautiful.border_color = '#282828cc'
@@ -27,7 +27,7 @@ beautiful.menu_border_color = beautiful.border_color
 beautiful.menu_border_width = 2
 beautiful.menu_height = 36
 beautiful.menu_width = 260
-beautiful.menu_font = 'MartianMono Nerd Font Propo 10'
+beautiful.menu_font = 'SauceCodePro Nerd Font Propo Heavy 12'
 beautiful.menu_icon_size = 1
 -- Adjust values
 beautiful.tasklist_shape_border_color_focus = beautiful.bg_focus
@@ -49,7 +49,7 @@ beautiful.taglist_bg_empty = empty
 beautiful.taglist_bg_focus = beautiful.bg_normal
 beautiful.taglist_bg_volatile = beautiful.bg_normal
 beautiful.taglist_shape = gears.shape.rounded_bar
-beautiful.taglist_font = 'MartianMono Nerd Font Mono 12'
+beautiful.taglist_font = 'SauceCodePro Nerd Font Propo 10'
 beautiful.taglist_spacing = 4
 local lain_icons = os.getenv 'HOME' .. '/.config/awesome/lain/icons/layout/default/'
 beautiful.layout_stablefair = lain_icons .. 'termfairw.png'

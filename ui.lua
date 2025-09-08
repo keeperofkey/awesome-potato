@@ -79,21 +79,42 @@ mylauncher = awful.widget.launcher { menu = mymainmenu }
 
 -- {{{ Wibar
 -- Create a textclock widget
-mytextclock = wibox.widget.textclock '%m.%d.%y | %I:%M '
-local weatherwidget = awful.widget.watch(
-  -- Path to your script
-  os.getenv 'HOME' .. '/.config/awesome/scripts/openweather-city',
-  600, -- Update interval in seconds (e.g., every 10 minutes)
-  function(widget, stdout)
-    widget:set_markup(stdout)
-  end
-)
+mytextclock = wibox.widget.textclock()
+mytextclock.font = 'SauceCodePro Nerd Font Mono Bold 8'
+mytextclock.format = '%m.%d.%y | %I:%M '
+-- mytextclock = wibox.widget.textclock '%m.%d.%y | %I:%M '
+local weatherwidget = wibox.widget {
+  {
+    awful.widget.watch(
+      -- Path to your script
+      os.getenv 'HOME' .. '/.config/awesome/scripts/openweather-city',
+      600, -- Update interval in seconds (e.g., every 10 minutes)
+      function(widget, stdout)
+        widget:set_markup(stdout)
+      end
+    ),
+    font = 'SauceCodePro Nerd Font Mono Bold 8',
+    widget = wibox.container.margin,
+    left = 10,
+    -- right = 10,
+    top = 4,
+    bottom = 4,
+  },
+  widget = wibox.container.margin,
+  left = 4,
+  right = 4,
+}
 local volwidget = awful.widget.watch(
   -- Path to your script
   os.getenv 'HOME' .. '/.config/awesome/scripts/volume',
-  10, -- Update interval in seconds (e.g., every 10 minutes)
+  10, -- Update interval in seconds (e.g., every 10 seconds)
   function(widget, stdout)
-    widget:set_markup(stdout)
+    local output = stdout:gsub('\n', '')
+    if output and output ~= '' then
+      widget:set_markup('<span font_weight="medium" font_size="small">' .. output .. '</span>')
+    else
+      widget:set_markup('<span font_weight="medium" font_size="small"> N/A | </span>')
+    end
   end
 )
 -- local cpuwidget = awful.widget.watch(
@@ -327,8 +348,8 @@ screen.connect_signal('request::desktop_decoration', function(s)
           widget = wibox.widget.textbox,
           valign = 'center',
           -- halign = "center",
-          forced_width = 512, -- Adjust as needed
-          font = 'MartianMono Nerd Font Mono 8',
+          -- Dynamic width based on text content
+          font = 'SauceCodePro Nerd Font Propo Ultra-Light 8',
         },
         widget = wibox.container.margin,
         left = 10,
@@ -445,7 +466,7 @@ screen.connect_signal('request::desktop_decoration', function(s)
   update_focused_client_text()
   local cpu = lain.widget.cpu {
     settings = function()
-      widget:set_markup('<span font_weight="medium" font_size="small">  ' .. cpu_now.usage .. '% | </span>')
+      widget:set_markup('<span font_weight="medium" font_size="small">   ' .. cpu_now.usage .. '% | </span>')
     end,
   }
   local mem = lain.widget.mem {
@@ -475,96 +496,92 @@ screen.connect_signal('request::desktop_decoration', function(s)
       widget:set_markup('<span font_weight="medium" font_size="small">   ' .. bat_now.perc .. '% | </span>')
     end,
   }
-  -- vol.bar:buttons(awful.util.table.join(
-  --   awful.button({}, 1, function() -- left click
-  --     awful.spawn 'pavucontrol'
-  --   end),
-  --   awful.button({}, 2, function() -- middle click
-  --     os.execute(string.format('pactl set-sink-vol %d 100%%', vol.device))
-  --     vol.update()
-  --   end),
-  --   awful.button({}, 3, function() -- right click
-  --     os.execute(string.format('pactl set-sink-mute %d toggle', vol.device))
-  --     vol.update()
-  --   end),
-  --   awful.button({}, 4, function() -- scroll up
-  --     os.execute(string.format('pactl set-sink-vol %d +1%%', vol.device))
-  --     vol.update()
-  --   end),
-  --   awful.button({}, 5, function() -- scroll down
-  --     os.execute(string.format('pactl set-sink-vol %d -1%%', vol.device))
-  --     vol.update()
-  --   end)
-  -- ))
-  -- CPU widget
-  -- cpuwidget = wibox.widget.textbox()
-  -- vicious.register(cpuwidget, vicious.widgets.cpu, '  $1% | ', 2)
-  --
-  -- -- Memory widget
-  -- memwidget = wibox.widget.textbox()
-  -- vicious.register(memwidget, vicious.widgets.mem, '  $1% | ', 5)
-  --
-  -- -- Filesystem widget
-  -- fswidget = wibox.widget.textbox()
-  -- vicious.register(fswidget, vicious.widgets.fs, '  ${/ avail_p}% | ', 120)
-  --
-  -- -- Network widget (replace 'enp3s0' with your interface)
-  -- netwidget = wibox.widget.textbox()
-  -- vicious.register(netwidget, vicious.widgets.net, '  ${enp66s0 up_gb} ${enp66s0 down_gb} | ', 3)
-  --
-  -- -- Volume widget (requires alsa-utils)
-  -- volwidget = wibox.widget.textbox()
-  -- vicious.register(volwidget, vicious.widgets.volume, '  $1% | ', 2, 'Master')
-  --
-  -- -- Battery widget
-  -- batwidget = wibox.widget.textbox()
-  -- vicious.register(batwidget, vicious.widgets.bat, '$1 $2% | ', 60, 'BAT1')
 
-  -- Create the wibox
+  local gpu = awful.widget.watch(
+    os.getenv 'HOME' .. '/.config/awesome/scripts/gpu-usage',
+    5, -- Update every 5 seconds
+    function(widget, stdout)
+      local output = stdout:gsub('\n', '')
+      if output and output ~= '' then
+        widget:set_markup('<span font_weight="medium" font_size="small">' .. output .. ' | </span>')
+      else
+        widget:set_markup '<span font_weight="medium" font_size="small">󰢮 N/A | </span>'
+      end
+    end
+  )
+
+  -- Create the main wibox (transparent background)
   s.mywibox = awful.wibar {
     position = 'top',
     screen = s,
-    height = 28,
-    bg = beautiful.bg_normal,
+    height = 32,
+    bg = '#00000000', -- Transparent background
     fg = beautiful.fg_normal,
-    -- shape = function(cr, width, height)
-    -- 	gears.shape.rounded_rect(cr, width, height, 5)
-    -- end,
   }
 
-  -- Add widgets to the wibox
+  -- Helper function to create pill-shaped containers that only take up needed space
+  local function create_pill_section(widgets, bg_color, margins)
+    margins = margins or { left = 4, right = 4, top = 2, bottom = 2 }
+    return wibox.widget {
+      {
+        {
+          widgets,
+          widget = wibox.container.margin,
+          left = margins.left,
+          right = margins.right,
+          top = margins.top,
+          bottom = margins.bottom,
+        },
+        bg = bg_color or beautiful.bg_normal,
+        shape = gears.shape.rounded_rect,
+        widget = wibox.container.background,
+      },
+      widget = wibox.container.margin,
+      left = 4,
+      right = 4,
+      top = 2,
+      bottom = 2,
+    }
+  end
+
+  -- Create left section (tags and tasks)
+  local left_section = create_pill_section {
+    layout = wibox.layout.fixed.horizontal,
+    s.mypromptbox,
+    s.mytaglist,
+    s.mytasklist,
+    s.focused_client_text,
+  }
+
+  -- Create center section (focused client and weather)
+  local center_section = create_pill_section {
+    layout = wibox.layout.fixed.horizontal,
+    weatherwidget,
+  }
+
+  -- Create right section (system info)
+  local right_section = create_pill_section {
+    layout = wibox.layout.fixed.horizontal,
+    -- wibox.widget.systray(),
+    cpu.widget,
+    mem.widget,
+    fs.widget,
+    gpu,
+    volwidget,
+    mytextclock,
+  }
+
+  -- Stack layout for true screen centering
   s.mywibox:setup {
     layout = wibox.layout.stack,
+    -- Bottom layer: left and right sections
     {
       layout = wibox.layout.align.horizontal,
-      { -- Left widgets
-        layout = wibox.layout.fixed.horizontal,
-        -- mylauncher,
-        s.mypromptbox,
-        s.mytaglist,
-        s.mytasklist,
-        s.focused_client_text, -- Middle widget
-      },
-      nil, -- No middle widget
-      { -- Right widgets
-        layout = wibox.layout.fixed.horizontal,
-        wibox.widget.systray(),
-        cpu.widget,
-        mem.widget,
-        fs.widget,
-        -- net.widget,
-        -- vol.bar,
-        volume,
-        bat.widget,
-        mytextclock,
-        s.mylayoutbox,
-      },
-    },
-    { -- Top layer: centered weather widget
-      layout = wibox.layout.align.horizontal,
+      left_section,
       nil,
-      wibox.container.place(weatherwidget),
-      nil,
+      right_section,
     },
+    -- Top layer: center section, truly centered on screen
+    wibox.container.place(center_section, 'center', 'center'),
   }
 end)
